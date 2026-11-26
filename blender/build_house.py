@@ -1197,30 +1197,89 @@ for step_i in range(n_steps):
             "Lighting", mats["emit_warm"]
         )
 
-# Angled Tempered Glass Balustrade & Matte-Black Handrail along South side of Staircase (Y=12.52)
-bm_sg = bmesh.new()
-sg_pts = [
-    (5.58, 12.52, 0.18), (1.90, 12.52, FLOOR2_Z - 0.02),
-    (1.90, 12.52, FLOOR2_Z + 1.02), (5.58, 12.52, 1.18),
-]
-v_sg0 = [bm_sg.verts.new((px, py - 0.007, pz)) for px, py, pz in sg_pts]
-v_sg1 = [bm_sg.verts.new((px, py + 0.007, pz)) for px, py, pz in sg_pts]
-bm_sg.faces.new(v_sg0)
-bm_sg.faces.new(v_sg1[::-1])
-for k in range(4):
-    kn = (k + 1) % 4
-    bm_sg.faces.new((v_sg0[k], v_sg0[kn], v_sg1[kn], v_sg1[k]))
-bmesh.ops.recalc_face_normals(bm_sg, faces=bm_sg.faces)
-apply_box_uv(bm_sg, scale=1.0)
-m_sg = bpy.data.meshes.new("L2_Stair_GlassGuard")
-bm_sg.to_mesh(m_sg)
-bm_sg.free()
-m_sg.materials.append(mats["glass_clear"])
-link_obj(bpy.data.objects.new("L2_Stair_GlassGuard", m_sg), "Architecture")
-make_swept_tube("L2_Stair_Handrail", [(5.60, 12.52, 1.19), (1.88, 12.52, FLOOR2_Z + 1.03)], 0.022, "Architecture", mats["black_metal"], segs=10)
-make_swept_tube("L2_Stair_HandrailWall", [(5.58, 13.35, 1.16), (1.92, 13.35, FLOOR2_Z + 1.00)], 0.018, "Architecture", mats["black_metal"], segs=10)
+# Minimalist Matte-Black Hollow-Steel Staircase Railing (economical, crisp & weatherproof — NO glass!)
+# 6 vertical hollow-steel stanchions along the South edge of the floating staircase + 3 parallel safety rails + top handrail
+stair_x0, stair_x1 = 5.56, 1.90
+stair_z0, stair_z1 = 0.22, FLOOR2_Z
+for sp_i in range(6):
+    t_sp = sp_i / 5.0
+    px_sp = stair_x0 + (stair_x1 - stair_x0) * t_sp
+    pz_bot = stair_z0 + (stair_z1 - stair_z0) * t_sp
+    make_box(
+        f"L2_Stair_RailPost_{sp_i+1:02d}",
+        px_sp - 0.018, 12.502, pz_bot - 0.04,
+        px_sp + 0.018, 12.538, pz_bot + 1.02,
+        "Architecture", mats["black_metal"], bevel=0.002
+    )
+# Angled hollow-steel top handrail + 3 parallel mid-guard bars following staircase slope
+make_swept_tube("L2_Stair_Handrail", [(5.58, 12.52, 1.24), (1.88, 12.52, FLOOR2_Z + 1.03)], 0.022, "Architecture", mats["black_metal"], segs=8)
+for mr_i, z_off in enumerate((0.28, 0.54, 0.80)):
+    make_swept_tube(
+        f"L2_Stair_MidBar_{mr_i+1}",
+        [(5.56, 12.52, stair_z0 + z_off), (1.90, 12.52, stair_z1 + z_off)],
+        0.011, "Architecture", mats["black_metal"], segs=6
+    )
+make_swept_tube("L2_Stair_HandrailWall", [(5.58, 13.35, 1.18), (1.92, 13.35, FLOOR2_Z + 1.00)], 0.018, "Architecture", mats["black_metal"], segs=8)
 
-# Upper Landing & Rear Drying Deck Frameless Glass Balustrades (H = 1.05 m)
+
+def make_hollow_steel_railing(rg_name, rx0, ry0, rx1, ry1, z_base, height=1.05):
+    """Builds a clean Indonesian modern minimalist hollow-steel vertical-baluster railing (NO expensive glass!)."""
+    is_x = (rx1 - rx0) >= (ry1 - ry0)
+    span = (rx1 - rx0) if is_x else (ry1 - ry0)
+    mid_c = ((ry0 + ry1) * 0.5) if is_x else ((rx0 + rx1) * 0.5)
+    z_bot_rail = z_base + 0.08
+    z_top_rail = z_base + height
+
+    # Top handrail (46x36 mm hollow steel) & bottom tie-rail (32x26 mm with 8cm floor drainage gap)
+    if is_x:
+        make_box(f"{rg_name}_TopRail", rx0 - 0.02, mid_c - 0.023, z_top_rail - 0.036, rx1 + 0.02, mid_c + 0.023, z_top_rail, "Architecture", mats["black_metal"], bevel=0.002)
+        make_box(f"{rg_name}_BotRail", rx0, mid_c - 0.016, z_bot_rail, rx1, mid_c + 0.016, z_bot_rail + 0.026, "Architecture", mats["black_metal"])
+    else:
+        make_box(f"{rg_name}_TopRail", mid_c - 0.023, ry0 - 0.02, z_top_rail - 0.036, mid_c + 0.023, ry1 + 0.02, z_top_rail, "Architecture", mats["black_metal"], bevel=0.002)
+        make_box(f"{rg_name}_BotRail", mid_c - 0.016, ry0, z_bot_rail, mid_c + 0.016, ry1, z_bot_rail + 0.026, "Architecture", mats["black_metal"])
+
+    # Main structural posts (40x40 mm every ~1.35 m)
+    n_posts = max(2, int(round(span / 1.35)) + 1)
+    for pi in range(n_posts):
+        t = pi / float(n_posts - 1)
+        pos = (rx0 + span * t) if is_x else (ry0 + span * t)
+        if is_x:
+            make_box(f"{rg_name}_Post_{pi:02d}", pos - 0.020, mid_c - 0.020, z_base - 0.01, pos + 0.020, mid_c + 0.020, z_top_rail - 0.034, "Architecture", mats["black_metal"], bevel=0.002)
+        else:
+            make_box(f"{rg_name}_Post_{pi:02d}", mid_c - 0.020, pos - 0.020, z_base - 0.01, mid_c + 0.020, pos + 0.020, z_top_rail - 0.034, "Architecture", mats["black_metal"], bevel=0.002)
+
+    # Vertical slim hollow balusters (18x18 mm spaced ~12 cm apart) merged into 1 single crisp mesh per rail segment!
+    bm_b = bmesh.new()
+    n_bars = max(3, int(span / 0.125))
+    hw = 0.009
+    for bi in range(1, n_bars):
+        t = bi / float(n_bars)
+        pos = (rx0 + span * t) if is_x else (ry0 + span * t)
+        bx0, bx1 = (pos - hw, pos + hw) if is_x else (mid_c - hw, mid_c + hw)
+        by0, by1 = (mid_c - hw, mid_c + hw) if is_x else (pos - hw, pos + hw)
+        bz0, bz1 = z_bot_rail + 0.024, z_top_rail - 0.035
+        v = [
+            bm_b.verts.new((bx0, by0, bz0)), bm_b.verts.new((bx1, by0, bz0)),
+            bm_b.verts.new((bx1, by1, bz0)), bm_b.verts.new((bx0, by1, bz0)),
+            bm_b.verts.new((bx0, by0, bz1)), bm_b.verts.new((bx1, by0, bz1)),
+            bm_b.verts.new((bx1, by1, bz1)), bm_b.verts.new((bx0, by1, bz1)),
+        ]
+        for fverts in [
+            (v[0], v[3], v[2], v[1]), (v[4], v[5], v[6], v[7]),
+            (v[0], v[1], v[5], v[4]), (v[2], v[3], v[7], v[6]),
+            (v[1], v[2], v[6], v[5]), (v[3], v[0], v[4], v[7]),
+        ]:
+            bm_b.faces.new(fverts)
+    bmesh.ops.recalc_face_normals(bm_b, faces=bm_b.faces)
+    apply_box_uv(bm_b, scale=1.0)
+    m_b = bpy.data.meshes.new(f"{rg_name}_Balusters")
+    bm_b.to_mesh(m_b)
+    bm_b.free()
+    m_b.materials.append(mats["black_metal"])
+    link_obj(bpy.data.objects.new(f"{rg_name}_Balusters", m_b), "Architecture")
+
+
+# Upper Landing, Drying Deck & Front Sky Balcony Minimalist Hollow-Steel Railings (H = 1.05 m)
 for rg_name, rx0, ry0, rx1, ry1 in [
     ("L2_Rail_Landing_N", 0.20, 13.36, 1.90, 13.385),
     ("L2_Rail_Landing_W", 0.20, 11.70, 0.225, 13.38),
@@ -1228,9 +1287,7 @@ for rg_name, rx0, ry0, rx1, ry1 in [
     ("L2_Rail_Balcony_S", 3.164, 2.02, 8.95, 2.045),
     ("L2_Rail_Balcony_W", 3.164, 2.04, 3.189, 6.80),
 ]:
-    make_box(f"{rg_name}_Glass", rx0, ry0, FLOOR2_Z, rx1, ry1, FLOOR2_Z + 1.03, "Architecture", mats["glass_clear"])
-    make_box(f"{rg_name}_Cap", rx0 - 0.012, ry0 - 0.012, FLOOR2_Z + 1.02, rx1 + 0.012, ry1 + 0.012, FLOOR2_Z + 1.06, "Architecture", mats["black_metal"])
-    make_box(f"{rg_name}_Base", rx0 - 0.015, ry0 - 0.015, FLOOR2_Z - 0.01, rx1 + 0.015, ry1 + 0.015, FLOOR2_Z + 0.055, "Architecture", mats["black_metal"])
+    make_hollow_steel_railing(rg_name, rx0, ry0, rx1, ry1, FLOOR2_Z, height=1.05)
 
 # --- LEVEL 2 WALLS, PRIVACY BREEZE-SCREENS & WINDOWS ---
 # RM-12 Tempat Jemuran West Wall (solid masonry half-wall + horizontal breathable teak privacy louvers!)
@@ -2284,16 +2341,80 @@ def build_detailed_decorations(tag, col, pal):
     make_cylinder(f"{tag}_Decor_Laundry_Detergent2", 3.92, 3.75, z + 1.555, 0.050, 0.19, col, pal["pot"], segs=14)
     make_cylinder(f"{tag}_Decor_Laundry_Hamper", 4.44, 3.88, z, 0.18, 0.54, col, mats["linen_oatmeal"], segs=18, radius_top=0.21)
 
-    # --- 9. REAR OUTDOOR TERRACE (EXT-04): Tailored Woven Terrace Rug (strictly inside EXT-04), Hurricane Lantern & Coffee Service ---
+    # --- 9. REAR OUTDOOR TERRACE (EXT-04): Weatherproof Outdoor Lantern & Coffee Tray (NO indoor fabric rug outdoors!) ---
     tz = 0.11
-    make_box(f"{tag}_Decor_Terrace_Rug", 5.95, 11.88, tz, 8.55, 13.34, tz + 0.012, col, pal["rug"], bevel=0.005, smooth=True)
-    # Outdoor teak coffee table (F-TR-TBL: x=7.02..7.62, y=12.30..12.90, top=tz+0.42) hurricane lantern & cups
-    tt_z = tz + 0.42
-    make_box(f"{tag}_Decor_Terrace_Tray", 7.12, 12.40, tt_z, 7.52, 12.80, tt_z + 0.018, col, pal["metal"], bevel=0.004)
-    make_cylinder(f"{tag}_Decor_Terrace_LanternGlass", 7.26, 12.56, tt_z + 0.018, 0.075, 0.22, col, mats["glass_clear"], segs=16)
-    make_cylinder(f"{tag}_Decor_Terrace_LanternCandle", 7.26, 12.56, tt_z + 0.022, 0.036, 0.12, col, mats["emit_lamp"], segs=14)
-    make_cylinder(f"{tag}_Decor_Terrace_Cup1", 7.42, 12.52, tt_z + 0.018, 0.034, 0.065, col, mats["ceramic_white"], segs=14)
-    make_cylinder(f"{tag}_Decor_Terrace_Cup2", 7.40, 12.68, tt_z + 0.018, 0.034, 0.065, col, mats["ceramic_white"], segs=14)
+    # Outdoor terrazzo coffee table (F-TR-TBL: x=6.78..7.58, y=12.08..12.56, top=tz+0.40) hurricane lantern & mugs
+    tt_z = tz + 0.40
+    make_box(f"{tag}_Decor_Terrace_Tray", 6.98, 12.14, tt_z, 7.38, 12.50, tt_z + 0.018, col, pal["metal"], bevel=0.004)
+    make_cylinder(f"{tag}_Decor_Terrace_LanternGlass", 7.12, 12.30, tt_z + 0.018, 0.075, 0.22, col, mats["glass_clear"], segs=16)
+    make_cylinder(f"{tag}_Decor_Terrace_LanternCandle", 7.12, 12.30, tt_z + 0.022, 0.036, 0.12, col, mats["emit_lamp"], segs=14)
+    make_cylinder(f"{tag}_Decor_Terrace_Cup1", 7.28, 12.26, tt_z + 0.018, 0.034, 0.065, col, mats["ceramic_white"], segs=14)
+    make_cylinder(f"{tag}_Decor_Terrace_Cup2", 7.26, 12.40, tt_z + 0.018, 0.034, 0.065, col, mats["ceramic_white"], segs=14)
+
+
+def make_tropical_outdoor_seat(fid, x0, y0, x1, y1, z_base, col, back_at_y1=True):
+    """
+    Builds a true weatherproof Indonesian tropical outdoor chair / 2-seater bench:
+    - Powder-coated matte-black tubular/hollow steel A-frame legs & side armrests with teak cap
+    - Rain-draining horizontal oiled-teak timber slats for seat & reclined ergonomic backrest
+    - ZERO indoor fabric cushions that would get soaked in tropical rain!
+    """
+    seat_z = z_base + 0.42
+    arm_z = z_base + 0.60
+    back_top_z = z_base + 0.80
+    # Side steel frames + legs + horizontal stretchers + teak armrest caps
+    for sx, stag in [(x0 + 0.025, "W"), (x1 - 0.025, "E")]:
+        # Front & rear tubular steel legs + top armrest loop
+        make_swept_tube(
+            f"{fid}_SteelSide_{stag}",
+            [
+                (sx, y0 + 0.04, z_base),
+                (sx, y0 + 0.05, arm_z),
+                (sx, y1 - 0.06, arm_z),
+                (sx, y1 - 0.03, z_base),
+            ],
+            0.016, col, mats["black_metal"], segs=8
+        )
+        # Reclined steel backrest upright post
+        if back_at_y1:
+            make_swept_tube(
+                f"{fid}_BackPost_{stag}",
+                [(sx, y1 - 0.14, seat_z - 0.02), (sx, y1 - 0.02, back_top_z)],
+                0.014, col, mats["black_metal"], segs=8
+            )
+        else:
+            make_swept_tube(
+                f"{fid}_BackPost_{stag}",
+                [(sx, y0 + 0.14, seat_z - 0.02), (sx, y0 + 0.02, back_top_z)],
+                0.014, col, mats["black_metal"], segs=8
+            )
+        # Lower side tie bar + under-seat frame rail
+        make_swept_tube(f"{fid}_SideTie_{stag}", [(sx, y0 + 0.045, seat_z - 0.03), (sx, y1 - 0.05, seat_z - 0.03)], 0.012, col, mats["black_metal"], segs=6)
+        # Warm oiled teak armrest cap (stays cool in tropical sun!)
+        make_box(f"{fid}_ArmTeak_{stag}", sx - 0.026, y0 + 0.05, arm_z + 0.010, sx + 0.026, y1 - 0.07, arm_z + 0.032, col, mats["floor_teak"], bevel=0.005)
+
+    # Cross steel support beams under seat
+    for cy_b in (y0 + 0.12, y1 - 0.16):
+        make_box(f"{fid}_CrossBar_{cy_b:.2f}", x0 + 0.025, cy_b - 0.015, seat_z - 0.045, x1 - 0.025, cy_b + 0.015, seat_z - 0.015, col, mats["black_metal"])
+
+    # Rain-draining horizontal teak seat slats (5 spaced timber slats with 14mm rain gaps!)
+    y_seat0, y_seat1 = y0 + 0.05, y1 - 0.14
+    n_seat = 6
+    slat_step = (y_seat1 - y_seat0) / n_seat
+    for si in range(n_seat):
+        sy0 = y_seat0 + si * slat_step + 0.006
+        sy1 = y_seat0 + (si + 1) * slat_step - 0.008
+        # Slight ergonomic 2cm downward slope toward backrest
+        dz = -0.018 * (si / float(n_seat - 1)) if back_at_y1 else -0.018 * (1.0 - si / float(n_seat - 1))
+        make_box(f"{fid}_SeatSlat_{si}", x0 + 0.045, sy0, seat_z - 0.012 + dz, x1 - 0.045, sy1, seat_z + 0.012 + dz, col, mats["floor_teak"], bevel=0.004)
+
+    # Rain-draining reclined teak backrest slats (4 spaced angled timber slats!)
+    for bi in range(4):
+        tb = (bi + 0.5) / 4.0
+        bz = seat_z + 0.07 + tb * (back_top_z - seat_z - 0.10)
+        by = (y1 - 0.13 + tb * 0.11) if back_at_y1 else (y0 + 0.13 - tb * 0.11)
+        bs = make_box(f"{fid}_BackSlat_{bi}", x0 + 0.045, by - 0.012, bz - 0.032, x1 - 0.045, by + 0.012, bz + 0.032, col, mats["floor_teak"], bevel=0.004)
+        bs.rotation_euler = (math.radians(-16.0 if back_at_y1 else 16.0), 0.0, 0.0)
 
 
 def build_style_furniture(style_name, pal):
@@ -2857,10 +2978,14 @@ def build_style_furniture(style_name, pal):
             build_potted_plant(fid, px_plant, cy, z_base, r_plant, f["height_mm"] * M, col, pal["pot"])
 
         elif kind in ("outdoor_lounge", "armchair"):
-            make_box(f"{fid}_Frame", x0, y0, z_base + 0.08, x1, y1, z_base + 0.28, col, mats["walnut"], bevel=0.012)
-            make_plush_cushion(f"{fid}_Cushion", x0 + 0.03, y0 + 0.03, z_base + 0.28, x1 - 0.03, y1 - 0.03, z_base + 0.47, col, pal["upholstery"], puff=0.18)
-            make_plush_cushion(f"{fid}_Back", x0 + 0.03, y1 - 0.20, z_base + 0.44, x1 - 0.03, y1 - 0.01, z_base + 0.78, col, pal["upholstery"], puff=0.22)
-            make_plush_cushion(f"{fid}_AccentPillow", cx - 0.18, y1 - 0.32, z_base + 0.45, cx + 0.18, y1 - 0.16, z_base + 0.68, col, pal["accent_pillow"], puff=0.26)
+            if f["room"].startswith("EXT-"):
+                # Weatherproof Tropical Outdoor Seating: powder-coated black steel frame + drainage-slatted teak seat & angled back (NO indoor cushions!)
+                make_tropical_outdoor_seat(fid, x0, y0, x1, y1, z_base, col, back_at_y1=True)
+            else:
+                make_box(f"{fid}_Frame", x0, y0, z_base + 0.08, x1, y1, z_base + 0.28, col, mats["walnut"], bevel=0.012)
+                make_plush_cushion(f"{fid}_Cushion", x0 + 0.03, y0 + 0.03, z_base + 0.28, x1 - 0.03, y1 - 0.03, z_base + 0.47, col, pal["upholstery"], puff=0.18)
+                make_plush_cushion(f"{fid}_Back", x0 + 0.03, y1 - 0.20, z_base + 0.44, x1 - 0.03, y1 - 0.01, z_base + 0.78, col, pal["upholstery"], puff=0.22)
+                make_plush_cushion(f"{fid}_AccentPillow", cx - 0.18, y1 - 0.32, z_base + 0.45, cx + 0.18, y1 - 0.16, z_base + 0.68, col, pal["accent_pillow"], puff=0.26)
 
         elif kind == "car":
             build_luxury_car(fid, x0, y0, x1, y1, z_base, col, pal)
@@ -3083,16 +3208,19 @@ def build_level2_furniture(tag, col, pal):
 
     # =========================================================================
     # 3. EXT-05 L2 FRONT SKY BALCONY (X: 3.164..8.944, Y: 2.04..5.00)
+    #    100% Weatherproof Tropical Outdoor Patio Chairs & Slatted Teak Bistro Table (NO indoor cushions!)
     # =========================================================================
     for bx_c, b_tag in [(3.98, "W"), (5.38, "E")]:
-        make_box(f"{tag}_L2_Balc_ChairFrame_{b_tag}", bx_c - 0.36, 3.00, z2 + 0.06, bx_c + 0.36, 3.74, z2 + 0.26, col, mats["walnut"], bevel=0.01)
-        make_plush_cushion(f"{tag}_L2_Balc_ChairSeat_{b_tag}", bx_c - 0.33, 3.03, z2 + 0.26, bx_c + 0.33, 3.71, z2 + 0.44, col, pal["upholstery"], puff=0.18)
-        make_plush_cushion(f"{tag}_L2_Balc_ChairBack_{b_tag}", bx_c - 0.33, 3.52, z2 + 0.42, bx_c + 0.33, 3.73, z2 + 0.78, col, pal["upholstery"], puff=0.20)
-    make_cylinder(f"{tag}_L2_Balc_BistroBase", 4.68, 3.36, z2, 0.16, 0.03, col, mats["black_metal"], segs=16)
-    make_cylinder(f"{tag}_L2_Balc_BistroStem", 4.68, 3.36, z2 + 0.03, 0.022, 0.44, col, mats["black_metal"], segs=12)
-    make_cylinder(f"{tag}_L2_Balc_BistroTop", 4.68, 3.36, z2 + 0.47, 0.28, 0.032, col, mats["travertine"], segs=16)
-    make_curved_mug(f"{tag}_L2_Balc_Cup1", 4.62, 3.32, z2 + 0.502, col, mats["ceramic_white"], handle_angle=0.8)
-    make_curved_mug(f"{tag}_L2_Balc_Cup2", 4.76, 3.42, z2 + 0.502, col, mats["ceramic_white"], handle_angle=-1.4)
+        make_tropical_outdoor_seat(f"{tag}_L2_Balc_PatioChair_{b_tag}", bx_c - 0.34, 3.02, bx_c + 0.34, 3.72, z2, col, back_at_y1=True)
+    # Weatherproof Powder-Coated Steel + Slatted Teak Outdoor Bistro Table
+    make_cylinder(f"{tag}_L2_Balc_BistroBase", 4.68, 3.36, z2, 0.17, 0.028, col, mats["black_metal"], segs=16)
+    make_cylinder(f"{tag}_L2_Balc_BistroStem", 4.68, 3.36, z2 + 0.028, 0.022, 0.45, col, mats["black_metal"], segs=12)
+    make_box(f"{tag}_L2_Balc_BistroRim", 4.44, 3.12, z2 + 0.462, 4.92, 3.60, z2 + 0.486, col, mats["black_metal"], bevel=0.004)
+    for ts_i in range(5):
+        tsy = 3.14 + ts_i * 0.092
+        make_box(f"{tag}_L2_Balc_BistroSlat_{ts_i}", 4.45, tsy, z2 + 0.486, 4.91, tsy + 0.076, z2 + 0.506, col, mats["floor_teak"], bevel=0.004)
+    make_curved_mug(f"{tag}_L2_Balc_Cup1", 4.62, 3.32, z2 + 0.506, col, mats["ceramic_white"], handle_angle=0.8)
+    make_curved_mug(f"{tag}_L2_Balc_Cup2", 4.76, 3.42, z2 + 0.506, col, mats["ceramic_white"], handle_angle=-1.4)
     # Lush tropical planter shrubs along South-East Front Balcony trough!
     for pl_i, pl_x in enumerate((6.65, 7.55, 8.42)):
         sh_obj = make_tropical_shrub(f"{tag}_L2_Balc_PlanterShrub_{pl_i}", pl_x, 2.30, 0.34, col, seed=510 + pl_i * 13)

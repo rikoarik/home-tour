@@ -168,6 +168,11 @@ try {
   await sleep(900);
   await shot('11_l2_sky_lounge_balcony.png');
 
+  // 5f. Rear Floating Staircase (Minimalist Hollow-Steel Railing) & Rear Outdoor Terrace (Weatherproof Slatted-Teak Seating)
+  await send('Runtime.evaluate', { expression: 'window.__VILLA_APP__.teleportTo(7.45, 1.75, -11.95, 3.80, 1.85, -12.90);' });
+  await sleep(900);
+  await shot('12_rear_staircase_terrace.png');
+
   // Benchmark Desktop Medium (Smooth 60 FPS direct render mode)
   await send('Runtime.evaluate', { expression: 'window.__VILLA_APP__.setQuality("medium")' });
   await sleep(1400);

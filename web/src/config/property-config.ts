@@ -147,7 +147,7 @@ export const PROPERTY_CONFIG: PropertyMarketingConfig = {
       roomName: 'L2 · Sky Lounge & Front Sky Balcony',
       areaM2: 41.71,
       areaSqft: 448.96,
-      designFeature: 'Upper-level family lounge with 2.8 m sliding glass doors opening onto a frameless-glass sunset balcony with teak decking & built-in planter',
+      designFeature: 'Upper-level family lounge with 2.8 m sliding glass doors opening onto a sunset balcony with minimalist hollow-steel railings, weatherproof slatted-teak patio chairs & built-in planter',
       sellingPoint: 'Expands livable area to 143.8 m² across two levels with effortless indoor-outdoor entertaining.',
     },
   },
