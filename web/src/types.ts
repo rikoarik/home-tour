@@ -1,6 +1,7 @@
 export type CameraMode = 'exterior' | 'dollhouse' | 'floorplan' | 'firstperson';
 export type InteriorStyle = 'warm_luxury' | 'scandinavian' | 'modern';
 export type QualityLevel = 'low' | 'medium' | 'high' | 'ultra';
+export type FloorFilter = 'all' | '1' | '2';
 
 export interface InteractiveDoorConfig {
   id: string;
@@ -50,6 +51,7 @@ export interface SceneConfig {
   dollhouse_toggle_objects: {
     roof: string[];
     ceilings: string[];
+    level2_objects?: string[];
   };
   interactive_doors: InteractiveDoorConfig[];
   lighting_presets: Record<
@@ -91,6 +93,7 @@ export interface RoomSpec {
   name: string;
   short_name: string;
   zone: string;
+  floor?: 1 | 2;
   ceiling_height_mm: number;
   floor_material: string;
   polygon: [number, number][];
@@ -128,6 +131,7 @@ export interface FloorplanSpec {
     id: string;
     name: string;
     type: string;
+    floor?: 1 | 2;
     bounds: { x0: number; y0: number; x1: number; y1: number };
     width_mm: number;
     depth_mm: number;

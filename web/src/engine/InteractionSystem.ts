@@ -57,12 +57,16 @@ export class InteractionSystem {
     this.measureGroup.name = 'MeasurementOverlay';
     this.scene.add(this.measureGroup);
 
-    // Wire all 8 interactive Blender doors (D1..D8) with exact world bounding boxes & centers
+    // Wire all 10 interactive Blender doors (D1..D10 across L1 & L2) with exact world bounding boxes & centers
     for (const dc of sceneConfig.interactive_doors) {
       const obj = arch.doorObjects.get(dc.object_name);
       if (!obj) continue;
       const secondaryObj =
-        dc.id === 'D8' ? arch.doorObjects.get('Door_Interactive_D8_Panel2') : undefined;
+        dc.id === 'D8'
+          ? arch.doorObjects.get('Door_Interactive_D8_Panel2')
+          : dc.id === 'D10'
+            ? arch.doorObjects.get('Door_Interactive_L2_D10_Panel2')
+            : undefined;
 
       let closedBox = new THREE.Box3();
       if (dc.closed_aabb_threejs && dc.closed_aabb_threejs.length === 6) {
@@ -191,6 +195,7 @@ export class InteractionSystem {
     let nearest: NearbyDoorPrompt | null = null;
 
     for (const d of this.doors.values()) {
+      if (Math.abs(playerPos.y - d.center.y) > 2.0) continue;
       const dist = this.distanceToDoorXZ(playerPos.x, playerPos.z, d);
       if (dist > 2.25) {
         d.manualOverrideUntilAway = false;
@@ -223,6 +228,7 @@ export class InteractionSystem {
     let best: DoorAnimState | null = null;
     let bestDist = maxDist;
     for (const d of this.doors.values()) {
+      if (Math.abs(playerPos.y - d.center.y) > 2.0) continue;
       const dist = this.distanceToDoorXZ(playerPos.x, playerPos.z, d);
       if (dist < bestDist) {
         bestDist = dist;
@@ -292,11 +298,18 @@ export class InteractionSystem {
       return;
     }
 
-    // 2. Check if clicked an interactive door (or its child handle/stile)
+    // 2. Check if clicked an interactive door (or its child handle/stile across L1 & L2)
     let cur: THREE.Object3D | null = hit.object;
     while (cur) {
       for (const [doorId, state] of this.doors.entries()) {
-        if (cur === state.obj || cur === state.secondaryObj || cur.name.startsWith(`Door_Interactive_${doorId}`) || cur.name.startsWith(`DoorFrame_${doorId}`)) {
+        if (
+          cur === state.obj ||
+          cur === state.secondaryObj ||
+          cur.name.startsWith(`Door_Interactive_${doorId}`) ||
+          cur.name.startsWith(`Door_Interactive_L2_${doorId}`) ||
+          cur.name.startsWith(`DoorFrame_${doorId}`) ||
+          cur.name.startsWith(`DoorFrame_L2_${doorId}`)
+        ) {
           const isOpen = this.toggleDoor(doorId, undefined, true);
           callbacks.onDoorToggled(doorId, isOpen);
           return;
@@ -314,7 +327,7 @@ export class InteractionSystem {
 
     // 3. In Dollhouse or Floor Plan mode, clicking a room floor enters First-Person in that room!
     if (cameraMode === 'dollhouse' || cameraMode === 'floorplan') {
-      const roomId = this.resolveRoomIdAtPoint(hit.point.x, -hit.point.z);
+      const roomId = this.resolveRoomIdAtPoint(hit.point.x, -hit.point.z, hit.point.y);
       if (roomId) {
         callbacks.onRoomClicked(roomId);
         return;
@@ -361,11 +374,13 @@ export class InteractionSystem {
     );
   }
 
-  resolveRoomIdAtPoint(xM: number, yCadM: number): string | null {
+  resolveRoomIdAtPoint(xM: number, yCadM: number, elevY = 1.6): string | null {
     const xMm = xM * 1000;
     const yMm = yCadM * 1000;
+    const targetFloor: 1 | 2 = elevY >= 2.7 ? 2 : 1;
 
     for (const r of this.floorplan.rooms) {
+      if ((r.floor ?? 1) !== targetFloor) continue;
       if (r.sub_rects) {
         for (const [x0, y0, x1, y1] of r.sub_rects) {
           if (xMm >= x0 && xMm <= x1 && yMm >= y0 && yMm <= y1) return r.id;
@@ -379,6 +394,7 @@ export class InteractionSystem {
       }
     }
     for (const z of this.floorplan.outdoor_zones) {
+      if ((z.floor ?? 1) !== targetFloor) continue;
       const b = z.bounds;
       if (xMm >= b.x0 && xMm <= b.x1 && yMm >= b.y0 && yMm <= b.y1) return z.id;
     }

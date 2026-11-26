@@ -28,7 +28,7 @@ for (const file of fs.readdirSync(assetsDir)) {
   const full = path.join(assetsDir, file);
   if (file.endsWith('.json')) {
     embedded[file] = fs.readFileSync(full, 'utf8');
-  } else if (file.endsWith('.glb')) {
+  } else if (file.endsWith('.glb') || file.endsWith('.webp') || file.endsWith('.png')) {
     embedded[file] = fs.readFileSync(full).toString('base64');
   }
 }

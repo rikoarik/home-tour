@@ -235,14 +235,14 @@ def make_stone(name: str, size: int, base_rgb, vein_rgb, dark_vein_rgb, grout_rg
 
 
 def make_limewash_plaster(name: str, size: int, base_rgb, seed=30, rough_base=0.91):
-    """Tactile hand-troweled Venetian limewash / mineral architectural plaster."""
-    trowel = fbm(size, [(4, 4, 0.42), (9, 9, 0.35), (20, 20, 0.23)], seed=seed)
+    """Smooth luxury hand-troweled Venetian limewash / fine architectural skim-coat plaster."""
+    trowel = fbm(size, [(3, 3, 0.48), (7, 7, 0.34), (16, 16, 0.18)], seed=seed)
     sand = fbm(size, [(96, 96, 0.45), (192, 192, 0.35), (384, 384, 0.20)], seed=seed + 31)
     c = np.array(base_rgb, dtype=np.float32)
-    albedo = c * (0.93 + 0.11 * trowel[..., None] + 0.045 * (sand[..., None] - 0.5))
-    rough = np.clip(rough_base + 0.07 * (trowel - 0.5) + 0.05 * (sand - 0.5), 0.84, 0.98)
-    height = 0.52 * trowel + 0.48 * sand
-    save_pbr(name, albedo, rough, height, normal_strength=1.35)
+    albedo = c * (0.968 + 0.052 * trowel[..., None] + 0.018 * (sand[..., None] - 0.5))
+    rough = np.clip(rough_base + 0.04 * (trowel - 0.5) + 0.025 * (sand - 0.5), 0.86, 0.98)
+    height = 0.65 * trowel + 0.35 * sand
+    save_pbr(name, albedo, rough, height, normal_strength=0.42)
 
 
 def make_woven_fabric(name: str, size: int, base_rgb, seed=40, rough_base=0.94):
@@ -293,32 +293,37 @@ def make_artwork(filename: str, palette, seed=70):
 
 
 print("Synthesizing high-craft tactile PBR texture maps with micro-AO and crisp normals...")
-make_wood_planks("white_oak", 1024, [206, 178, 142], [180, 150, 114], [142, 112, 80], planks=7, seed=11, rough_base=0.64, gap_px=2)
-make_wood_planks("teak_deck", 1024, [156, 112, 72], [128, 88, 54], [84, 54, 30], planks=11, seed=14, rough_base=0.68, gap_px=3)
+make_wood_planks("white_oak", 1024, [206, 178, 142], [180, 150, 114], [142, 112, 80], planks=7, seed=11, rough_base=0.50, gap_px=2)
+make_wood_planks("teak_deck", 1024, [156, 112, 72], [128, 88, 54], [84, 54, 30], planks=11, seed=14, rough_base=0.60, gap_px=3)
 
-make_wood_veneer("walnut_wood", 1024, [118, 78, 50], [88, 56, 35], [58, 35, 21], seed=12, rough_base=0.65)
-make_wood_veneer("light_oak_veneer", 1024, [214, 188, 154], [188, 160, 126], [154, 126, 94], seed=15, rough_base=0.66)
+make_wood_veneer("walnut_wood", 1024, [118, 78, 50], [88, 56, 35], [58, 35, 21], seed=12, rough_base=0.48)
+make_wood_veneer("light_oak_veneer", 1024, [214, 188, 154], [188, 160, 126], [154, 126, 94], seed=15, rough_base=0.52)
 make_fluted_wood("fluted_walnut", 512, [116, 78, 50], [56, 34, 20], flutes=28, seed=13)
 make_fluted_wood("fluted_oak", 512, [210, 184, 150], [152, 122, 88], flutes=28, seed=16)
 
-make_stone("limestone_tile", 1024, [224, 215, 201], [204, 194, 179], [180, 170, 155], [166, 158, 146], tiles=2, seed=21, rough_base=0.66)
-make_stone("travertine_tile", 1024, [214, 200, 181], [186, 171, 150], [156, 140, 120], [158, 148, 134], tiles=3, seed=22, rough_base=0.68, linear_travertine=True)
-make_stone("modern_stone", 1024, [180, 178, 173], [156, 155, 150], [132, 132, 128], [118, 118, 115], tiles=2, seed=23, rough_base=0.64)
-make_stone("basalt_paver", 1024, [82, 86, 91], [64, 68, 73], [48, 51, 56], [36, 39, 43], tiles=4, seed=24, rough_base=0.80)
-make_stone("calacatta_marble", 1024, [241, 237, 230], [218, 211, 200], [162, 152, 139], [208, 203, 194], tiles=0, seed=25, rough_base=0.52)
-make_stone("charcoal_quartz", 512, [52, 55, 60], [42, 45, 50], [32, 35, 39], [32, 35, 39], tiles=0, seed=26, rough_base=0.56)
-make_stone("porcelain_grey", 512, [186, 188, 184], [170, 173, 169], [152, 155, 152], [140, 143, 140], tiles=3, seed=27, rough_base=0.68)
+make_stone("limestone_tile", 1024, [224, 215, 201], [204, 194, 179], [180, 170, 155], [166, 158, 146], tiles=2, seed=21, rough_base=0.54)
+make_stone("travertine_tile", 1024, [214, 200, 181], [186, 171, 150], [156, 140, 120], [158, 148, 134], tiles=3, seed=22, rough_base=0.58, linear_travertine=True)
+make_stone("modern_stone", 1024, [180, 178, 173], [156, 155, 150], [132, 132, 128], [118, 118, 115], tiles=2, seed=23, rough_base=0.52)
+make_stone("basalt_paver", 1024, [82, 86, 91], [64, 68, 73], [48, 51, 56], [36, 39, 43], tiles=4, seed=24, rough_base=0.76)
+make_stone("calacatta_marble", 1024, [242, 238, 231], [218, 211, 200], [156, 146, 134], [208, 203, 194], tiles=0, seed=25, rough_base=0.38)
+make_stone("charcoal_quartz", 512, [52, 55, 60], [42, 45, 50], [32, 35, 39], [32, 35, 39], tiles=0, seed=26, rough_base=0.44)
+make_stone("porcelain_grey", 512, [186, 188, 184], [170, 173, 169], [152, 155, 152], [140, 143, 140], tiles=3, seed=27, rough_base=0.60)
+make_stone("sidewalk_concrete", 512, [196, 192, 184], [176, 172, 164], [154, 150, 142], [118, 114, 108], tiles=2, seed=28, rough_base=0.84)
+make_stone("street_asphalt", 512, [52, 55, 60], [40, 43, 48], [30, 32, 36], [28, 30, 34], tiles=0, seed=29, rough_base=0.88)
 
-make_limewash_plaster("stucco_warm_white", 512, [237, 232, 222], seed=31, rough_base=0.91)
-make_limewash_plaster("stucco_pure_white", 512, [244, 241, 236], seed=32, rough_base=0.90)
-make_limewash_plaster("stucco_exterior", 512, [233, 228, 218], seed=33, rough_base=0.92)
+make_limewash_plaster("stucco_warm_white", 512, [242, 237, 229], seed=31, rough_base=0.90)
+make_limewash_plaster("stucco_pure_white", 512, [246, 244, 240], seed=32, rough_base=0.89)
+make_limewash_plaster("stucco_exterior", 512, [238, 234, 226], seed=33, rough_base=0.90)
 
-make_woven_fabric("boucle_beige", 512, [218, 204, 186], seed=41, rough_base=0.94)
-make_woven_fabric("linen_oatmeal", 512, [228, 220, 208], seed=42, rough_base=0.95)
-make_woven_fabric("fabric_charcoal", 512, [70, 74, 80], seed=43, rough_base=0.93)
-make_woven_fabric("rug_ivory", 512, [232, 224, 212], seed=44, rough_base=0.97)
-make_woven_fabric("linen_sage", 512, [154, 166, 150], seed=45, rough_base=0.94)
-make_woven_fabric("fabric_terracotta", 512, [142, 80, 52], seed=46, rough_base=0.93)
+make_woven_fabric("boucle_beige", 512, [218, 204, 186], seed=41, rough_base=0.93)
+make_woven_fabric("linen_oatmeal", 512, [228, 220, 208], seed=42, rough_base=0.94)
+make_woven_fabric("fabric_charcoal", 512, [70, 74, 80], seed=43, rough_base=0.92)
+make_woven_fabric("rug_ivory", 512, [232, 224, 212], seed=44, rough_base=0.96)
+make_woven_fabric("linen_sage", 512, [154, 166, 150], seed=45, rough_base=0.93)
+make_woven_fabric("fabric_terracotta", 512, [142, 80, 52], seed=46, rough_base=0.92)
+make_woven_fabric("linen_white_crisp", 512, [242, 240, 235], seed=47, rough_base=0.90)
+make_woven_fabric("cotton_navy_denim", 512, [56, 72, 98], seed=48, rough_base=0.92)
+make_woven_fabric("rattan_weave", 512, [182, 146, 102], seed=49, rough_base=0.82)
 
 make_lush_grass("tropical_lawn", 1024, seed=51)
 make_artwork("art_warm_luxury.png", [(236, 228, 216), (190, 170, 144), (104, 74, 52), (214, 200, 180), (168, 132, 76)], seed=71)
@@ -385,5 +390,166 @@ def make_ide_screen(filename):
 
 make_ide_screen("code_ide_screen.png")
 
+WEB_ASSETS_DIR = Path("/Users/macbookm2/.gemini/antigravity/scratch/luxury-residence-floorplan/web/public/assets")
+WEB_ASSETS_DIR.mkdir(parents=True, exist_ok=True)
+
+
+def make_botanical_branch_rgba():
+    """Synthesizes a photorealistic alpha-cutout tropical foliage spray with dense varied fine leaves & twigs."""
+    sz = 512
+    img = Image.new("RGBA", (sz, sz), (0, 0, 0, 0))
+    drw = ImageDraw.Draw(img)
+    rng = np.random.default_rng(404)
+    # Main woody branch + 4 organic side shoots
+    drw.line([(256, 502), (250, 355), (262, 215), (252, 68)], fill=(68, 52, 36, 255), width=6)
+    shoots = [
+        [(252, 410), (156, 330), (88, 265)],
+        [(252, 390), (355, 315), (424, 255)],
+        [(258, 280), (168, 205), (105, 145)],
+        [(258, 265), (350, 192), (412, 132)],
+    ]
+    for s_pts in shoots:
+        drw.line(s_pts, fill=(72, 56, 38, 255), width=4)
+
+    # 44 delicate overlapping deep-olive / tropical-emerald / sunlit-sage leaves along all shoots
+    leaf_palette = [
+        (38, 66, 30),
+        (46, 78, 35),
+        (54, 88, 40),
+        (64, 98, 45),
+        (76, 108, 50),
+        (42, 72, 32),
+    ]
+    anchors = []
+    # Main stem leaves
+    for t in np.linspace(0.14, 0.94, 14):
+        bx = 256 + float(np.sin(t * 4.0) * 6.0)
+        by = 480 - t * 420
+        for side in (-1, 1):
+            anchors.append((bx, by, side * float(rng.uniform(0.45, 1.05)), float(rng.uniform(52, 78)), float(rng.uniform(16, 23))))
+    # Side shoot leaves
+    for s_pts in shoots:
+        x0, y0 = s_pts[0]
+        x2, y2 = s_pts[2]
+        ang_base = float(np.arctan2(x2 - x0, y0 - y2))
+        for t in np.linspace(0.25, 0.96, 6):
+            bx = x0 + (x2 - x0) * t
+            by = y0 + (y2 - y0) * t
+            for side in (-1, 1):
+                anchors.append((bx, by, ang_base + side * float(rng.uniform(0.35, 0.78)), float(rng.uniform(42, 66)), float(rng.uniform(13, 20))))
+
+    for idx, (bx, by, ang, length, width) in enumerate(anchors):
+        col = leaf_palette[idx % len(leaf_palette)]
+        ca, sa = np.cos(ang), np.sin(ang)
+        pts = []
+        for k in range(12):
+            t = k / 11.0
+            w_t = (np.sin(t * np.pi) ** 0.85) * (1.0 - 0.22 * t) * width
+            lx = t * length
+            pts.append((bx + lx * sa - w_t * ca, by - lx * ca - w_t * sa))
+        for k in range(11, -1, -1):
+            t = k / 11.0
+            w_t = (np.sin(t * np.pi) ** 0.85) * (1.0 - 0.22 * t) * width
+            lx = t * length
+            pts.append((bx + lx * sa + w_t * ca, by - lx * ca + w_t * sa))
+        drw.polygon(pts, fill=(*col, 255))
+        tip_x = bx + length * 0.85 * sa
+        tip_y = by - length * 0.85 * ca
+        vein_col = (min(255, col[0] + 22), min(255, col[1] + 26), min(255, col[2] + 14), 210)
+        drw.line([(bx, by), (tip_x, tip_y)], fill=vein_col, width=2)
+
+    img.save(TEX_DIR / "foliage_branch_rgba.png", optimize=True)
+    img.save(WEB_ASSETS_DIR / "foliage_branch_rgba.webp", format="WEBP", quality=86)
+
+
+def make_sky_panorama(filename: str, mode: str):
+    """Generates a 1536x768 equirectangular photographic sky + crisp cumulus clouds + architectural bounce horizon."""
+    w, h = 1536, 768
+    y = np.linspace(0.0, 1.0, h, dtype=np.float32)[:, None]  # 0 = zenith, 0.5 = horizon, 1 = nadir
+    x = np.linspace(0.0, 1.0, w, dtype=np.float32)[None, :]
+    elev = (0.5 - y) * 2.0  # +1 zenith .. 0 horizon .. -1 nadir
+    sky_mask = np.clip(elev, 0.0, 1.0)
+
+    # Crisp multi-octave cumulus clouds visible right behind the 2-story roofline (elev 0.03..0.85)
+    c_base = value_noise_2d(512, 8, 5, seed=601 if mode == "day" else 607)
+    c_mid = value_noise_2d(512, 18, 12, seed=602)
+    c_fine = value_noise_2d(512, 40, 28, seed=603)
+    cloud_sq = 0.50 * c_base + 0.30 * c_mid + 0.20 * c_fine
+    cloud_img = Image.fromarray(np.clip(cloud_sq * 255, 0, 255).astype(np.uint8), mode="L").resize((w, h), Image.Resampling.BILINEAR)
+    clouds = np.array(cloud_img, dtype=np.float32) / 255.0
+    cloud_band = np.clip((elev - 0.02) * 8.0, 0.0, 1.0) * np.clip((0.90 - elev) * 2.2, 0.0, 1.0)
+    cloud_density = np.clip((clouds - 0.47) * 3.8, 0.0, 1.0) * cloud_band
+
+    sun_u = 0.28 if mode == "day" else 0.72
+    sun_v = 0.30 if mode == "day" else 0.45
+    du = np.minimum(np.abs(x - sun_u), 1.0 - np.abs(x - sun_u))
+    dv = y - sun_v
+    sun_dist = np.sqrt((du * 2.0) ** 2 + dv ** 2)
+    sun_glow = np.exp(-sun_dist * (8.0 if mode == "day" else 5.5))
+
+    if mode == "day":
+        # Rich photographic tropical azure-cerulean blue sky + luminous sunlit cumulus clouds
+        zenith = np.array([34, 96, 186], dtype=np.float32)
+        mid = np.array([96, 158, 224], dtype=np.float32)
+        horiz = np.array([204, 224, 242], dtype=np.float32)
+        ground = np.array([92, 84, 72], dtype=np.float32)
+        ground_horiz = np.array([176, 172, 164], dtype=np.float32)
+        t_sky = sky_mask ** 0.38
+        rgb = np.where(
+            elev[..., None] >= 0.0,
+            horiz * (1.0 - t_sky[..., None]) + (mid * (1.0 - sky_mask[..., None]) + zenith * sky_mask[..., None]) * t_sky[..., None],
+            ground_horiz * np.exp(elev[..., None] * 6.0) + ground * (1.0 - np.exp(elev[..., None] * 6.0)),
+        )
+        cloud_lit = np.array([255, 253, 249], dtype=np.float32)
+        cloud_shade = np.array([162, 184, 212], dtype=np.float32)
+        cloud_hi = np.clip((clouds - 0.45) * 2.8, 0.0, 1.0)[..., None]
+        cloud_col = cloud_shade * (1.0 - cloud_hi) + cloud_lit * cloud_hi
+        rgb = rgb * (1.0 - cloud_density[..., None] * 0.92) + cloud_col * (cloud_density[..., None] * 0.92)
+        rgb = np.clip(rgb + np.array([255, 244, 218], dtype=np.float32) * (sun_glow[..., None] * 0.40), 0, 255)
+    elif mode == "sunset":
+        zenith = np.array([38, 54, 98], dtype=np.float32)
+        mid = np.array([134, 96, 118], dtype=np.float32)
+        horiz = np.array([248, 168, 112], dtype=np.float32)
+        ground = np.array([48, 38, 34], dtype=np.float32)
+        ground_horiz = np.array([142, 98, 76], dtype=np.float32)
+        t_sky = sky_mask ** 0.45
+        rgb = np.where(
+            elev[..., None] >= 0.0,
+            horiz * (1.0 - t_sky[..., None]) + (mid * (1.0 - sky_mask[..., None]) + zenith * sky_mask[..., None]) * t_sky[..., None],
+            ground_horiz * np.exp(elev[..., None] * 6.0) + ground * (1.0 - np.exp(elev[..., None] * 6.0)),
+        )
+        cloud_lit = np.array([255, 196, 134], dtype=np.float32)
+        cloud_shade = np.array([92, 68, 86], dtype=np.float32)
+        cloud_col = cloud_shade * (1.0 - np.clip(clouds * 1.2, 0, 1)[..., None]) + cloud_lit * np.clip(clouds * 1.2, 0, 1)[..., None]
+        rgb = rgb * (1.0 - cloud_density[..., None] * 0.80) + cloud_col * (cloud_density[..., None] * 0.80)
+        rgb = np.clip(rgb + np.array([255, 186, 110], dtype=np.float32) * (sun_glow[..., None] * 0.65), 0, 255)
+    else:
+        zenith = np.array([9, 14, 28], dtype=np.float32)
+        horiz = np.array([24, 36, 58], dtype=np.float32)
+        ground = np.array([14, 15, 18], dtype=np.float32)
+        t_sky = sky_mask ** 0.55
+        rgb = np.where(
+            elev[..., None] >= 0.0,
+            horiz * (1.0 - t_sky[..., None]) + zenith * t_sky[..., None],
+            horiz * 0.65 * np.exp(elev[..., None] * 7.0) + ground * (1.0 - np.exp(elev[..., None] * 7.0)),
+        )
+        rgb = np.broadcast_to(rgb, (h, w, 3)).copy()
+        # Subtle crisp pinpoint night stars in upper sky
+        rng = np.random.default_rng(777)
+        for _ in range(420):
+            sx = int(rng.integers(0, w))
+            sy = int(rng.integers(12, int(h * 0.44)))
+            br = float(rng.uniform(135, 245))
+            rgb[sy, sx] = np.clip(rgb[sy, sx] + br, 0, 255)
+
+    out = Image.fromarray(np.clip(rgb, 0, 255).astype(np.uint8), mode="RGB")
+    out.save(WEB_ASSETS_DIR / filename, format="WEBP", quality=85)
+
+
+make_botanical_branch_rgba()
+make_sky_panorama("sky_day_clouds.webp", "day")
+make_sky_panorama("sky_sunset_clouds.webp", "sunset")
+make_sky_panorama("sky_night_stars.webp", "night")
+
 files = list(TEX_DIR.glob("*.png"))
-print(f"Generated {len(files)} high-craft tactile PBR texture maps in {TEX_DIR}")
+print(f"Generated {len(files)} high-craft tactile PBR texture maps + 3 cloudy sky panoramas & alpha foliage!")

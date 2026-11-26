@@ -1,7 +1,7 @@
 {
   "meta": {
-    "project_name": "Modern Single-Story Luxury Residence \u2014 Villa Aurelia 123",
-    "drawing_title": "GROUND FLOOR ARCHITECTURAL PLAN",
+    "project_name": "Modern Two-Story Tropical Luxury Residence — Villa Aurelia 123",
+    "drawing_title": "GROUND & SECOND FLOOR ARCHITECTURAL PLAN",
     "sheet_number": "A-101",
     "scale": "1:50",
     "units": "mm",
@@ -57,6 +57,10 @@
     "front_garden_area_m2": 11.59,
     "rear_garden_area_m2": 9.88,
     "rear_terrace_area_m2": 6.58,
+    "level2_drying_deck_m2": 21.92,
+    "level2_sky_lounge_m2": 24.95,
+    "level2_front_balcony_m2": 16.76,
+    "total_gross_floor_area_m2": 143.8,
     "validation_residual_m2": 0.0
   },
   "building_footprint_polygon": [
@@ -223,6 +227,30 @@
       "finish": "teak_timber_deck",
       "covered": true,
       "canopy_note": "1,200 mm architectural roof overhang"
+    },
+    {
+      "id": "EXT-05",
+      "name": "L2 · Front Sky Balcony",
+      "type": "balcony_l2",
+      "floor": 2,
+      "bounds": {
+        "x0": 3164,
+        "y0": 2100,
+        "x1": 8944,
+        "y1": 5000
+      },
+      "polygon": [
+        [3164, 2100],
+        [8944, 2100],
+        [8944, 5000],
+        [3164, 5000]
+      ],
+      "width_mm": 5780,
+      "depth_mm": 2900,
+      "area_m2": 16.76,
+      "finish": "teak_timber_deck",
+      "covered": false,
+      "canopy_note": "Frameless laminated glass railing, teak decking & tropical planter trough"
     }
   ],
   "rooms": [
@@ -652,6 +680,48 @@
       "notes": "L-shaped honed quartz countertop, 4-burner induction hob, double sink, integrated fridge & oven tower",
       "area_m2": 6.0,
       "area_sqft": 64.58
+    },
+    {
+      "id": "RM-12",
+      "name": "L2 · Tempat Jemuran & Service Deck",
+      "short_name": "L2 TEMPAT\nJEMURAN",
+      "zone": "service",
+      "floor": 2,
+      "ceiling_height_mm": 2850,
+      "floor_material": "matte_porcelain_grey",
+      "polygon": [
+        [200, 6800],
+        [4864, 6800],
+        [4864, 11500],
+        [200, 11500]
+      ],
+      "width_mm": 4664,
+      "depth_mm": 4700,
+      "label_pos": [2500, 9100],
+      "notes": "Covered sunlit clothes-drying terrace with teak-louver skylight rain canopy, privacy breeze-screen, dual stainless drying racks, slop sink & ironing station",
+      "area_m2": 21.92,
+      "area_sqft": 235.94
+    },
+    {
+      "id": "RM-13",
+      "name": "L2 · Sky Lounge & Family Room",
+      "short_name": "L2 SKY\nLOUNGE",
+      "zone": "public",
+      "floor": 2,
+      "ceiling_height_mm": 2850,
+      "floor_material": "engineered_white_oak",
+      "polygon": [
+        [4984, 5200],
+        [8944, 5200],
+        [8944, 11500],
+        [4984, 11500]
+      ],
+      "width_mm": 3960,
+      "depth_mm": 6300,
+      "label_pos": [6960, 8300],
+      "notes": "Upper-level panoramic glass lounge connecting directly to Tempat Jemuran (D9) and Front Sky Balcony (D10)",
+      "area_m2": 24.95,
+      "area_sqft": 268.56
     }
   ],
   "walls": [
@@ -1986,9 +2056,9 @@
       "kind": "outdoor_lounge",
       "name": "Outdoor Teak Lounge Sofa",
       "rect": [
-        6100,
+        6450,
         12720,
-        7700,
+        7950,
         13380
       ],
       "height_mm": 720,
@@ -2001,9 +2071,9 @@
       "kind": "coffee_table",
       "name": "Outdoor Stone Side Table",
       "rect": [
-        6500,
+        6780,
         12080,
-        7300,
+        7580,
         12560
       ],
       "height_mm": 400,
@@ -2016,9 +2086,9 @@
       "kind": "armchair",
       "name": "Outdoor Lounge Armchair",
       "rect": [
-        7980,
+        8180,
         12450,
-        8680,
+        8880,
         13150
       ],
       "height_mm": 720,
@@ -2098,10 +2168,10 @@
       "zone": "EXT-03",
       "kind": "tree",
       "center": [
-        1050,
-        12650
+        920,
+        12180
       ],
-      "radius_mm": 650,
+      "radius_mm": 620,
       "name": "Rear Courtyard Japanese Maple"
     },
     {
@@ -2109,10 +2179,10 @@
       "zone": "EXT-03",
       "kind": "tree",
       "center": [
-        4550,
-        12720
+        4350,
+        12080
       ],
-      "radius_mm": 540,
+      "radius_mm": 480,
       "name": "Ornamental Bamboo / Palm"
     },
     {
@@ -2395,6 +2465,38 @@
         7500,
         2300,
         1180
+      ]
+    },
+    {
+      "id": "WP-11",
+      "name": "L2 Tempat Jemuran & Sky Service Deck",
+      "room": "RM-12",
+      "floor": 2,
+      "position_mm": [
+        1300,
+        10850,
+        5000
+      ],
+      "look_at_mm": [
+        2650,
+        8200,
+        4550
+      ]
+    },
+    {
+      "id": "WP-12",
+      "name": "L2 Sky Lounge & Front Balcony",
+      "room": "RM-13",
+      "floor": 2,
+      "position_mm": [
+        6950,
+        9600,
+        5000
+      ],
+      "look_at_mm": [
+        6800,
+        3600,
+        4450
       ]
     }
   ],

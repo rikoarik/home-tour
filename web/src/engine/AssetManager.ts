@@ -11,6 +11,7 @@ export interface LoadedArchitecture {
   root: THREE.Group;
   roofObjects: THREE.Object3D[];
   ceilingObjects: THREE.Object3D[];
+  level2Objects: THREE.Object3D[];
   floorOverrideMeshes: THREE.Mesh[];
   originalFloorMaterials: Map<THREE.Mesh, THREE.Material | THREE.Material[]>;
   curtainObjects: THREE.Object3D[];
@@ -118,55 +119,64 @@ export class AssetManager {
             }
           }
           if (m.normalMap) {
-            m.normalScale.set(1.22, 1.22);
+            if (name.includes('Interior_Wall') || name.includes('Ceiling')) {
+              m.normalScale.set(0.24, 0.24);
+            } else if (name.includes('Exterior_Stucco')) {
+              m.normalScale.set(0.36, 0.36);
+            } else {
+              m.normalScale.set(0.88, 0.88);
+            }
+          }
+          if (m.aoMap) {
+            m.aoMapIntensity = 0.78;
           }
           // Strip accidental mirror-shiny glTF clearcoat on furniture, walls, wood, stone & screens,
           // while preserving authentic automotive clearcoat sheen on the GT car bodywork
           if ('clearcoat' in m) {
             const phys = m as THREE.MeshPhysicalMaterial;
             if (name.includes('Car_Silver')) {
-              phys.clearcoat = 0.92;
-              phys.clearcoatRoughness = 0.08;
+              phys.clearcoat = 0.95;
+              phys.clearcoatRoughness = 0.06;
             } else {
               phys.clearcoat = 0;
             }
           }
 
-          // Physically accurate satin-matte architectural IBL reflection intensities & minimum roughness bounds
+          // Physically calibrated grazing-sheen architectural PBR reflection intensities & roughness bounds
           if (name.includes('Mirror')) {
-            m.envMapIntensity = 1.45;
-            m.roughness = 0.025;
+            m.envMapIntensity = 1.55;
+            m.roughness = 0.02;
           } else if (name.includes('Car_Silver')) {
-            m.envMapIntensity = 1.35;
-            m.roughness = 0.22;
-            m.metalness = 0.86;
+            m.envMapIntensity = 1.55;
+            m.roughness = 0.18;
+            m.metalness = 0.88;
           } else if (name.includes('Car_RubberTire') || name.includes('Car_Carbon')) {
-            m.envMapIntensity = 0.25;
-            m.roughness = Math.max(m.roughness, 0.78);
+            m.envMapIntensity = 0.28;
+            m.roughness = Math.max(m.roughness, 0.76);
             m.metalness = 0.05;
           } else if (name.includes('Glass')) {
-            m.envMapIntensity = 1.35;
+            m.envMapIntensity = 1.45;
           } else if (name.includes('Brass') || name.includes('Steel')) {
-            m.envMapIntensity = 1.05;
-            m.roughness = Math.max(m.roughness, 0.28);
+            m.envMapIntensity = 1.25;
+            m.roughness = Math.max(m.roughness, 0.24);
           } else if (name.includes('MatteBlack')) {
-            m.envMapIntensity = 0.48;
-            m.roughness = Math.max(m.roughness, 0.48);
-            m.metalness = 0.68;
+            m.envMapIntensity = 0.55;
+            m.roughness = Math.max(m.roughness, 0.44);
+            m.metalness = 0.72;
           } else if (name.includes('Marble') || name.includes('Quartz') || name.includes('Ceramic')) {
-            m.envMapIntensity = 0.52;
-            m.roughness = Math.max(m.roughness, 0.42);
+            m.envMapIntensity = 0.72;
+            m.roughness = Math.max(m.roughness, 0.34);
           } else if (name.includes('Floor_') || name.includes('Wood_') || name.includes('Cabinet_') || name.includes('Leather_')) {
-            m.envMapIntensity = 0.40;
-            m.roughness = Math.max(m.roughness, 0.56);
+            m.envMapIntensity = 0.52;
+            m.roughness = Math.max(m.roughness, 0.44);
             m.metalness = 0.0;
           } else if (name.includes('Screen_CodeIDE') || name.includes('OLED_Screen')) {
-            m.envMapIntensity = 0.22;
-            m.roughness = Math.max(m.roughness, 0.42);
+            m.envMapIntensity = 0.26;
+            m.roughness = Math.max(m.roughness, 0.36);
             m.metalness = 0.0;
           } else {
             // Matte limewash plaster walls, ceilings, fabrics, rugs, curtains, foliage & lawn
-            m.envMapIntensity = 0.24;
+            m.envMapIntensity = 0.26;
             m.roughness = Math.max(m.roughness, 0.84);
             m.metalness = 0.0;
           }
@@ -200,8 +210,12 @@ export class AssetManager {
           ) {
             // Preserve crisp HDR emissive intensity for subtle architectural & automotive LED bloom
             m.emissiveIntensity = Math.max(m.emissiveIntensity, 1.75);
-          } else if (name.includes('Floor_Limestone') || name.includes('Floor_WhiteOak') || name.includes('Floor_ModernStone')) {
-            this.styleMaterialCache.set(name, m);
+          } else if (name.includes('Floor_Limestone')) {
+            this.styleMaterialCache.set('Mat_Floor_Limestone', m);
+          } else if (name.includes('Floor_WhiteOak')) {
+            this.styleMaterialCache.set('Mat_Floor_WhiteOak', m);
+          } else if (name.includes('Floor_ModernStone')) {
+            this.styleMaterialCache.set('Mat_Floor_ModernStone', m);
           }
           m.needsUpdate = true;
         }
@@ -288,11 +302,12 @@ export class AssetManager {
 
     for (const bucket of buckets.values()) {
       if (bucket.meshes.length < 2) continue;
+      const hasUv1 = bucket.meshes.some((m) => Boolean(m.geometry.getAttribute('uv1')));
       const geos: THREE.BufferGeometry[] = [];
       for (const m of bucket.meshes) {
         const src = m.geometry.index ? m.geometry.toNonIndexed() : m.geometry.clone();
         src.applyMatrix4(m.matrixWorld);
-        // Normalize attributes strictly to (position, normal, uv) so mergeGeometries never mismatches
+        // Normalize attributes strictly to (position, normal, uv[, uv1]) so Cycles baked AO maps survive batching!
         const pos = src.getAttribute('position');
         if (!pos) {
           src.dispose();
@@ -302,8 +317,16 @@ export class AssetManager {
         if (!src.getAttribute('uv')) {
           src.setAttribute('uv', new THREE.BufferAttribute(new Float32Array(pos.count * 2), 2));
         }
+        if (hasUv1 && !src.getAttribute('uv1')) {
+          src.setAttribute('uv1', new THREE.BufferAttribute(new Float32Array(pos.count * 2), 2));
+        }
         for (const attrName of Object.keys(src.attributes)) {
-          if (attrName !== 'position' && attrName !== 'normal' && attrName !== 'uv') {
+          if (
+            attrName !== 'position' &&
+            attrName !== 'normal' &&
+            attrName !== 'uv' &&
+            !(hasUv1 && attrName === 'uv1')
+          ) {
             src.deleteAttribute(attrName);
           }
         }
@@ -327,7 +350,14 @@ export class AssetManager {
       batchMesh.receiveShadow = bucket.receiveShadow;
       batchMesh.frustumCulled = true;
       // Freeze static batch transforms so Three.js skips redundant CPU world-matrix recomputes each frame
-      if (bucket.groupTag === 'STATIC' || bucket.groupTag === 'ROOF' || bucket.groupTag === 'CEIL') {
+      if (
+        bucket.groupTag === 'STATIC' ||
+        bucket.groupTag === 'L2_STATIC' ||
+        bucket.groupTag === 'ROOF' ||
+        bucket.groupTag === 'L2_ROOF' ||
+        bucket.groupTag === 'CEIL' ||
+        bucket.groupTag === 'L2_CEIL'
+      ) {
         batchMesh.matrixAutoUpdate = false;
         batchMesh.updateMatrix();
       }
@@ -377,36 +407,50 @@ export class AssetManager {
     this.batchStaticMeshes(root, (mesh) => {
       const n = mesh.name || '';
       if (isFloorStyleTarget(n) || isMovingDoorHierarchy(mesh)) return null;
-      if (roofSet.has(n)) return 'ROOF';
+      const isL2 = n.includes('L2_');
+      const pref = isL2 ? 'L2_' : '';
+      if (roofSet.has(n)) return `${pref}ROOF`;
       const lightGrp = resolveLightGroupIdFromName(n);
-      if (n.startsWith('Fixture_DL_')) {
-        return lightGrp ? `CEIL_LIGHT_${lightGrp}` : 'CEIL';
+      if (n.startsWith('Fixture_DL_') || n.startsWith('Fixture_L2_DL_')) {
+        return lightGrp ? `${pref}CEIL_LIGHT_${lightGrp}` : `${pref}CEIL`;
       }
-      if (ceilSet.has(n)) return 'CEIL';
-      if (lightGrp) return `LIGHT_${lightGrp}`;
-      return 'STATIC';
+      if (ceilSet.has(n)) return `${pref}CEIL`;
+      if (lightGrp) return `${pref}LIGHT_${lightGrp}`;
+      return `${pref}STATIC`;
     });
 
     const roofObjects: THREE.Object3D[] = [];
     const ceilingObjects: THREE.Object3D[] = [];
+    const level2Objects: THREE.Object3D[] = [];
     const floorOverrideMeshes: THREE.Mesh[] = [];
     const originalFloorMaterials = new Map<THREE.Mesh, THREE.Material | THREE.Material[]>();
     const doorObjects = new Map<string, THREE.Object3D>();
 
     root.traverse((obj) => {
-      if (roofSet.has(obj.name) || obj.name.startsWith('Batch_ROOF__')) roofObjects.push(obj);
+      const n = obj.name || '';
+      if (roofSet.has(n) || n.startsWith('Batch_ROOF__') || n.startsWith('Batch_L2_ROOF__')) roofObjects.push(obj);
       if (
-        ceilSet.has(obj.name) ||
-        obj.name.startsWith('Fixture_DL_') ||
-        obj.name.startsWith('Batch_CEIL__') ||
-        obj.name.startsWith('Batch_CEIL_LIGHT_')
+        ceilSet.has(n) ||
+        n.startsWith('Fixture_DL_') ||
+        n.startsWith('Fixture_L2_DL_') ||
+        n.startsWith('Batch_CEIL__') ||
+        n.startsWith('Batch_L2_CEIL__') ||
+        n.startsWith('Batch_CEIL_LIGHT_') ||
+        n.startsWith('Batch_L2_CEIL_LIGHT_')
       ) {
         ceilingObjects.push(obj);
       }
-      if (doorNameSet.has(obj.name) || obj.name.startsWith('Door_Interactive_D8_Panel')) {
-        doorObjects.set(obj.name, obj);
+      if (n.includes('L2_')) {
+        level2Objects.push(obj);
       }
-      if (obj instanceof THREE.Mesh && isFloorStyleTarget(obj.name)) {
+      if (
+        doorNameSet.has(n) ||
+        n.startsWith('Door_Interactive_D8_Panel') ||
+        n.startsWith('Door_Interactive_L2_D10_Panel')
+      ) {
+        doorObjects.set(n, obj);
+      }
+      if (obj instanceof THREE.Mesh && isFloorStyleTarget(n)) {
         floorOverrideMeshes.push(obj);
         originalFloorMaterials.set(obj, obj.material);
       }
@@ -424,6 +468,7 @@ export class AssetManager {
       root,
       roofObjects,
       ceilingObjects,
+      level2Objects,
       floorOverrideMeshes,
       originalFloorMaterials,
       curtainObjects: [],
@@ -461,13 +506,14 @@ export class AssetManager {
     const group = await this.loadGLB(styleMeta.file, onProgress);
     group.name = `Style_${style}`;
     this.enhanceSceneMaterials(group, true);
-    // Batch ~620 furniture/decor meshes into per-material & per-light-zone GPU batches (only animated curtains stay unmerged!)
+    // Batch ~760 furniture/decor meshes into per-floor, per-material & per-light-zone GPU batches
     this.batchStaticMeshes(group, (mesh) => {
       const n = mesh.name || '';
       if (n.includes('Curtain_')) return null;
+      const pref = n.includes('L2_') ? 'L2_' : '';
       const lightGrp = resolveLightGroupIdFromName(n);
-      if (lightGrp) return `LIGHT_${lightGrp}`;
-      return 'STATIC';
+      if (lightGrp) return `${pref}LIGHT_${lightGrp}`;
+      return `${pref}STATIC`;
     });
     this.styleCache.set(style, group);
     return group;

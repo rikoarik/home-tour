@@ -280,41 +280,52 @@ input:focus-visible {
 .brand-pill {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 9px 16px;
+  gap: 10px;
+  padding: 7px 14px;
   border-radius: var(--radius-pill);
+  flex-shrink: 0;
 }
 
 .brand-title {
   font-family: var(--font-serif);
-  font-size: 1.2rem;
+  font-size: 1.12rem;
   font-weight: 600;
   letter-spacing: 0.02em;
+  white-space: nowrap;
 }
 
 .brand-meta {
   font-family: var(--font-mono);
-  font-size: 0.72rem;
+  font-size: 0.68rem;
   color: var(--accent-gold);
+  white-space: nowrap;
 }
 
 .tool-strip {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   align-items: center;
-  gap: 6px;
-  padding: 6px;
+  gap: 3px;
+  padding: 5px 8px;
   border-radius: var(--radius-pill);
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.tool-strip::-webkit-scrollbar {
+  display: none;
 }
 
 .icon-btn {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 7px 12px;
+  gap: 5px;
+  padding: 6px 9px;
   border-radius: var(--radius-pill);
-  font-size: 0.78rem;
+  font-size: 0.74rem;
   font-weight: 500;
+  white-space: nowrap;
+  flex-shrink: 0;
   color: var(--text-muted);
   transition: background 0.15s ease, color 0.15s ease;
 }

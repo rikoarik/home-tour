@@ -43,7 +43,7 @@ export interface PropertyMarketingConfig {
  */
 export const PROPERTY_CONFIG: PropertyMarketingConfig = {
   projectName: 'Villa Aurelia 123',
-  tagline: 'Modern Tropical Single-Story Luxury Residence',
+  tagline: 'Modern Two-Story Tropical Luxury Residence',
   address: 'Jl. Kemang Selatan Residences No. 123 (Editable Site Address)',
   price: '$485,000 USD (Editable Asking Price)',
   statusBadge: 'Private Collection · Ready to Explore',
@@ -135,6 +135,20 @@ export const PROPERTY_CONFIG: PropertyMarketingConfig = {
       areaSqft: 91.71,
       designFeature: '2.5 m walnut standing desk by the 1.6 m garden picture window with 49" ultrawide + vertical coding monitors, homelab shelf & reading lounge',
       sellingPoint: 'Purpose-built natural-light software engineering sanctuary overlooking the front garden specimen tree.',
+    },
+    'WP-11': {
+      roomName: 'L2 · Tempat Jemuran & Sky Service Deck',
+      areaM2: 21.92,
+      areaSqft: 235.94,
+      designFeature: 'Rain-shielded teak-louver skylight pergola, privacy breeze-screen slats, dual brushed-stainless drying racks, recessed slop sink & ironing station',
+      sellingPoint: 'Sunlit, cross-ventilated upper laundry drying terrace discreetly screened from street view while staying 100% dry in tropical rain.',
+    },
+    'WP-12': {
+      roomName: 'L2 · Sky Lounge & Front Sky Balcony',
+      areaM2: 41.71,
+      areaSqft: 448.96,
+      designFeature: 'Upper-level family lounge with 2.8 m sliding glass doors opening onto a frameless-glass sunset balcony with teak decking & built-in planter',
+      sellingPoint: 'Expands livable area to 143.8 m² across two levels with effortless indoor-outdoor entertaining.',
     },
   },
 };

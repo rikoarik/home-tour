@@ -40,6 +40,8 @@ export class MiniMap {
     return [this.ox + xM * this.scale, this.oy - yCadM * this.scale];
   }
 
+  private activeFloor: 1 | 2 = 1;
+
   private handleClick(e: MouseEvent): void {
     const rect = this.canvas.getBoundingClientRect();
     const px = ((e.clientX - rect.left) / rect.width) * this.canvas.width;
@@ -48,6 +50,7 @@ export class MiniMap {
     const yMm = ((this.oy - py) / this.scale) * 1000;
 
     for (const r of this.floorplan.rooms) {
+      if ((r.floor ?? 1) !== this.activeFloor) continue;
       if (r.sub_rects) {
         for (const [x0, y0, x1, y1] of r.sub_rects) {
           if (xMm >= x0 && xMm <= x1 && yMm >= y0 && yMm <= y1) {
@@ -65,6 +68,7 @@ export class MiniMap {
       }
     }
     for (const z of this.floorplan.outdoor_zones) {
+      if ((z.floor ?? 1) !== this.activeFloor) continue;
       const b = z.bounds;
       if (xMm >= b.x0 && xMm <= b.x1 && yMm >= b.y0 && yMm <= b.y1) {
         this.onRoomSelect(z.id);
@@ -73,7 +77,8 @@ export class MiniMap {
     }
   }
 
-  render(camX: number, camYCad: number, headingRad: number, activeRoomId: string | null): void {
+  render(camX: number, camYCad: number, headingRad: number, activeRoomId: string | null, floor: 1 | 2 = 1): void {
+    this.activeFloor = floor;
     const ctx = this.ctx;
     const w = this.canvas.width;
     const h = this.canvas.height;
@@ -85,8 +90,9 @@ export class MiniMap {
     ctx.fillStyle = 'rgba(15, 23, 36, 0.72)';
     ctx.fillRect(sx0, sy0, sx1 - sx0, sy1 - sy0);
 
-    // Outdoor zones
+    // Outdoor zones for active floor
     for (const z of this.floorplan.outdoor_zones) {
+      if ((z.floor ?? 1) !== floor) continue;
       const b = z.bounds;
       const [x0, y1] = this.toPx(b.x0 / 1000, b.y0 / 1000);
       const [x1, y0] = this.toPx(b.x1 / 1000, b.y1 / 1000);
@@ -100,10 +106,11 @@ export class MiniMap {
       ctx.fillRect(x0, y0, x1 - x0, y1 - y0);
     }
 
-    // Interior rooms
+    // Interior rooms for active floor
     for (const r of this.floorplan.rooms) {
+      if ((r.floor ?? 1) !== floor) continue;
       const active = activeRoomId === r.id;
-      ctx.fillStyle = active ? 'rgba(212, 175, 118, 0.36)' : 'rgba(232, 226, 215, 0.14)';
+      ctx.fillStyle = active ? 'rgba(212, 175, 118, 0.36)' : 'rgba(232, 226, 215, 0.16)';
       if (r.sub_rects) {
         for (const [rx0, ry0, rx1, ry1] of r.sub_rects) {
           const [x0, y1] = this.toPx(rx0 / 1000, ry0 / 1000);
@@ -122,14 +129,39 @@ export class MiniMap {
       }
     }
 
-    // Structural walls
+    // Rear staircase indicator on both floors
+    const [stX0, stY1] = this.toPx(1.85, 12.50);
+    const [stX1, stY0] = this.toPx(5.55, 13.38);
+    ctx.fillStyle = 'rgba(212, 175, 118, 0.28)';
+    ctx.fillRect(stX0, stY0, stX1 - stX0, stY1 - stY0);
+
+    // Structural walls (L1 walls on floor 1, L2 perimeter partitions on floor 2)
     ctx.fillStyle = 'rgba(244, 241, 234, 0.85)';
-    for (const wall of this.floorplan.walls) {
-      const [wx0, wy0, wx1, wy1] = wall.rect;
-      const [x0, y1] = this.toPx(wx0 / 1000, wy0 / 1000);
-      const [x1, y0] = this.toPx(wx1 / 1000, wy1 / 1000);
-      ctx.fillRect(x0, y0, Math.max(1.5, x1 - x0), Math.max(1.5, y1 - y0));
+    if (floor === 1) {
+      for (const wall of this.floorplan.walls) {
+        const [wx0, wy0, wx1, wy1] = wall.rect;
+        const [x0, y1] = this.toPx(wx0 / 1000, wy0 / 1000);
+        const [x1, y0] = this.toPx(wx1 / 1000, wy1 / 1000);
+        ctx.fillRect(x0, y0, Math.max(1.5, x1 - x0), Math.max(1.5, y1 - y0));
+      }
+    } else {
+      ctx.strokeStyle = 'rgba(244, 241, 234, 0.85)';
+      ctx.lineWidth = 1.6;
+      for (const [rx0, ry0, rx1, ry1] of [
+        [0.2, 6.8, 4.864, 11.5],
+        [4.984, 5.2, 8.944, 11.5],
+        [3.164, 2.04, 8.944, 5.0],
+      ]) {
+        const [x0, y1] = this.toPx(rx0, ry0);
+        const [x1, y0] = this.toPx(rx1, ry1);
+        ctx.strokeRect(x0, y0, x1 - x0, y1 - y0);
+      }
     }
+
+    // Floor indicator pill in corner of minimap
+    ctx.fillStyle = 'rgba(212, 175, 118, 0.92)';
+    ctx.font = 'bold 10px ui-monospace, SFMono-Regular, monospace';
+    ctx.fillText(floor === 2 ? 'LANTAI 2' : 'LANTAI 1', sx0 + 6, sy0 + 14);
 
     // Site perimeter hairline
     ctx.strokeStyle = 'rgba(212, 175, 118, 0.65)';

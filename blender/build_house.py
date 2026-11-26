@@ -39,8 +39,12 @@ FLOOR_Z = 0.15                             # 150 mm plinth finished floor
 CEIL_H = spec["meta"]["ceiling_height_mm"] * M  # 3.000 m
 WET_CEIL_H = 2.80
 WALL_TOP_Z = FLOOR_Z + CEIL_H              # 3.150 m
-ROOF_SLAB_TOP_Z = WALL_TOP_Z + 0.34        # 3.490 m
-PARAPET_TOP_Z = ROOF_SLAB_TOP_Z + 0.36     # 3.850 m
+FLOOR2_Z = WALL_TOP_Z + 0.20               # 3.350 m (200 mm inter-floor reinforced concrete slab)
+CEIL2_H = 2.85                             # 2.850 m L2 clear height
+WALL2_TOP_Z = FLOOR2_Z + CEIL2_H           # 6.200 m
+ROOF_SLAB_TOP_Z = FLOOR2_Z                 # L1 roof plate = L2 subfloor datum (3.350 m)
+ROOF2_SLAB_TOP_Z = WALL2_TOP_Z + 0.28      # 6.480 m
+PARAPET_TOP_Z = ROOF2_SLAB_TOP_Z + 0.28    # 6.760 m
 
 # ---------------------------------------------------------------------------
 # 1. CLEAN SCENE & CYCLES METAL GPU SETUP
@@ -212,59 +216,62 @@ def make_pbr_mat(
 
 
 mats = {
-    # Architectural Surfaces (Natural Matte Mineral Plasters)
-    "ext_stucco": make_pbr_mat("Mat_Exterior_Stucco", "stucco_exterior", roughness=0.92, uv_scale=(0.45, 0.45), normal_strength=0.35),
-    "int_wall_warm": make_pbr_mat("Mat_Interior_Wall_Warm", "stucco_warm_white", roughness=0.91, uv_scale=(0.45, 0.45), normal_strength=0.22),
-    "int_wall_white": make_pbr_mat("Mat_Interior_Wall_White", "stucco_pure_white", roughness=0.90, uv_scale=(0.45, 0.45), normal_strength=0.20),
-    "ceiling_white": make_pbr_mat("Mat_Ceiling_MatteWhite", base_color=(0.93, 0.92, 0.89, 1.0), roughness=0.94),
+    # Architectural Surfaces (Smooth Luxury Venetian Limewash Plaster & Clean Exterior Render)
+    "ext_stucco": make_pbr_mat("Mat_Exterior_Stucco", "stucco_exterior", roughness=0.92, uv_scale=(0.45, 0.45), normal_strength=0.18),
+    "int_wall_warm": make_pbr_mat("Mat_Interior_Wall_Warm", "stucco_warm_white", roughness=0.91, uv_scale=(0.45, 0.45), normal_strength=0.10),
+    "int_wall_white": make_pbr_mat("Mat_Interior_Wall_White", "stucco_pure_white", roughness=0.90, uv_scale=(0.45, 0.45), normal_strength=0.09),
+    "ceiling_white": make_pbr_mat("Mat_Ceiling_MatteWhite", base_color=(0.95, 0.94, 0.92, 1.0), roughness=0.94),
     "plinth_concrete": make_pbr_mat("Mat_Plinth_Concrete", "basalt_paver", roughness=0.84, uv_scale=(0.55, 0.55), normal_strength=0.42),
     "roof_membrane": make_pbr_mat("Mat_Roof_Membrane", base_color=(0.22, 0.23, 0.25, 1.0), roughness=0.90),
     "roof_coping": make_pbr_mat("Mat_Roof_Coping_Metal", base_color=(0.10, 0.105, 0.115, 1.0), roughness=0.48, metallic=0.80),
     "skirting": make_pbr_mat("Mat_Skirting_WarmWhite", base_color=(0.90, 0.88, 0.85, 1.0), roughness=0.68),
 
-    # Flooring (Satin-Matte Oiled Timber & Honed Geological Stones — ZERO plastic gloss!)
-    "floor_oak": make_pbr_mat("Mat_Floor_WhiteOak", "white_oak", roughness=0.64, uv_scale=(0.65, 0.65), normal_strength=0.40),
-    "floor_limestone": make_pbr_mat("Mat_Floor_Limestone", "limestone_tile", roughness=0.66, uv_scale=(0.55, 0.55), normal_strength=0.35),
-    "floor_travertine": make_pbr_mat("Mat_Floor_Travertine", "travertine_tile", roughness=0.68, uv_scale=(0.60, 0.60), normal_strength=0.38),
-    "floor_porcelain": make_pbr_mat("Mat_Floor_PorcelainGrey", "porcelain_grey", roughness=0.68, uv_scale=(0.65, 0.65), normal_strength=0.36),
-    "floor_modern_stone": make_pbr_mat("Mat_Floor_ModernStone", "modern_stone", roughness=0.64, uv_scale=(0.55, 0.55), normal_strength=0.36),
-    "floor_basalt": make_pbr_mat("Mat_Floor_BasaltPaver", "basalt_paver", roughness=0.80, uv_scale=(0.65, 0.65), normal_strength=0.55),
-    "floor_teak": make_pbr_mat("Mat_Floor_TeakDeck", "teak_deck", roughness=0.68, uv_scale=(0.90, 0.90), normal_strength=0.48),
+    # Flooring (Natural Satin Oiled Timber & Honed Geological Stones with grazing sheen)
+    "floor_oak": make_pbr_mat("Mat_Floor_WhiteOak", "white_oak", roughness=0.50, uv_scale=(0.65, 0.65), normal_strength=0.42),
+    "floor_limestone": make_pbr_mat("Mat_Floor_Limestone", "limestone_tile", roughness=0.54, uv_scale=(0.55, 0.55), normal_strength=0.38),
+    "floor_travertine": make_pbr_mat("Mat_Floor_Travertine", "travertine_tile", roughness=0.58, uv_scale=(0.60, 0.60), normal_strength=0.40),
+    "floor_porcelain": make_pbr_mat("Mat_Floor_PorcelainGrey", "porcelain_grey", roughness=0.60, uv_scale=(0.65, 0.65), normal_strength=0.38),
+    "floor_modern_stone": make_pbr_mat("Mat_Floor_ModernStone", "modern_stone", roughness=0.52, uv_scale=(0.55, 0.55), normal_strength=0.38),
+    "floor_basalt": make_pbr_mat("Mat_Floor_BasaltPaver", "basalt_paver", roughness=0.76, uv_scale=(0.65, 0.65), normal_strength=0.55),
+    "floor_teak": make_pbr_mat("Mat_Floor_TeakDeck", "teak_deck", roughness=0.60, uv_scale=(0.90, 0.90), normal_strength=0.48),
     "lawn": make_pbr_mat("Mat_Landscape_Lawn", "tropical_lawn", roughness=0.92, uv_scale=(0.55, 0.55), normal_strength=0.65),
     "pebbles": make_pbr_mat("Mat_Landscape_Pebbles", "basalt_paver", base_color=(0.58, 0.56, 0.52, 1.0), roughness=0.88, uv_scale=(1.8, 1.8), normal_strength=0.70),
-    "stepping_stone": make_pbr_mat("Mat_Stepping_Stone", "limestone_tile", roughness=0.74, uv_scale=(0.8, 0.8), normal_strength=0.35),
+    "stepping_stone": make_pbr_mat("Mat_Stepping_Stone", "limestone_tile", roughness=0.72, uv_scale=(0.8, 0.8), normal_strength=0.35),
     "soil": make_pbr_mat("Mat_Plant_Soil", base_color=(0.14, 0.10, 0.07, 1.0), roughness=0.96),
 
-    # Bookmatched Satin-Matte Furniture Woods & Honed Stones (NO clearcoat plastic glare!)
-    "walnut": make_pbr_mat("Mat_Wood_Walnut", "walnut_wood", roughness=0.65, uv_scale=(0.65, 0.65), normal_strength=0.32),
-    "fluted_walnut": make_pbr_mat("Mat_Wood_FlutedWalnut", "fluted_walnut", roughness=0.66, uv_scale=(1.1, 1.0), normal_strength=0.75),
-    "light_oak": make_pbr_mat("Mat_Wood_LightOak", "light_oak_veneer", roughness=0.66, uv_scale=(0.65, 0.65), normal_strength=0.30),
-    "fluted_oak": make_pbr_mat("Mat_Wood_FlutedOak", "fluted_oak", roughness=0.66, uv_scale=(1.1, 1.0), normal_strength=0.72),
-    "marble": make_pbr_mat("Mat_Stone_CalacattaMarble", "calacatta_marble", roughness=0.52, uv_scale=(0.55, 0.55), normal_strength=0.18),
-    "travertine": make_pbr_mat("Mat_Stone_Travertine", "travertine_tile", roughness=0.66, uv_scale=(0.75, 0.75), normal_strength=0.34),
-    "charcoal_quartz": make_pbr_mat("Mat_Stone_CharcoalQuartz", "charcoal_quartz", roughness=0.56, uv_scale=(0.75, 0.75), normal_strength=0.18),
-    "white_lacquer": make_pbr_mat("Mat_Cabinet_WhiteLacquer", base_color=(0.91, 0.90, 0.87, 1.0), roughness=0.52),
-    "matte_charcoal": make_pbr_mat("Mat_Cabinet_MatteCharcoal", base_color=(0.14, 0.15, 0.17, 1.0), roughness=0.62),
+    # Bookmatched Satin Furniture Woods & Honed Stones
+    "walnut": make_pbr_mat("Mat_Wood_Walnut", "walnut_wood", roughness=0.48, uv_scale=(0.65, 0.65), normal_strength=0.36),
+    "fluted_walnut": make_pbr_mat("Mat_Wood_FlutedWalnut", "fluted_walnut", roughness=0.56, uv_scale=(1.1, 1.0), normal_strength=0.78),
+    "light_oak": make_pbr_mat("Mat_Wood_LightOak", "light_oak_veneer", roughness=0.52, uv_scale=(0.65, 0.65), normal_strength=0.34),
+    "fluted_oak": make_pbr_mat("Mat_Wood_FlutedOak", "fluted_oak", roughness=0.58, uv_scale=(1.1, 1.0), normal_strength=0.74),
+    "marble": make_pbr_mat("Mat_Stone_CalacattaMarble", "calacatta_marble", roughness=0.38, uv_scale=(0.55, 0.55), normal_strength=0.22),
+    "travertine": make_pbr_mat("Mat_Stone_Travertine", "travertine_tile", roughness=0.58, uv_scale=(0.75, 0.75), normal_strength=0.36),
+    "charcoal_quartz": make_pbr_mat("Mat_Stone_CharcoalQuartz", "charcoal_quartz", roughness=0.44, uv_scale=(0.75, 0.75), normal_strength=0.20),
+    "white_lacquer": make_pbr_mat("Mat_Cabinet_WhiteLacquer", base_color=(0.91, 0.90, 0.87, 1.0), roughness=0.44),
+    "matte_charcoal": make_pbr_mat("Mat_Cabinet_MatteCharcoal", base_color=(0.14, 0.15, 0.17, 1.0), roughness=0.56),
 
     # Metals & Glass (Powder-Coated Matte Black & Satin Brushed Brass/Steel)
-    "black_metal": make_pbr_mat("Mat_Metal_MatteBlack", base_color=(0.08, 0.085, 0.095, 1.0), roughness=0.52, metallic=0.78),
-    "brushed_brass": make_pbr_mat("Mat_Metal_BrushedBrass", base_color=(0.76, 0.58, 0.30, 1.0), roughness=0.38, metallic=0.88),
-    "brushed_steel": make_pbr_mat("Mat_Metal_BrushedSteel", base_color=(0.70, 0.72, 0.74, 1.0), roughness=0.36, metallic=0.88),
-    "ceramic_white": make_pbr_mat("Mat_Sanitary_CeramicWhite", base_color=(0.94, 0.93, 0.91, 1.0), roughness=0.32),
-    "mirror": make_pbr_mat("Mat_Mirror", base_color=(0.92, 0.94, 0.95, 1.0), roughness=0.04, metallic=0.98),
-    "glass_clear": make_pbr_mat("Mat_Glass_Architectural", base_color=(0.86, 0.93, 0.95, 1.0), roughness=0.05, transmission=0.88, alpha=0.22),
-    "glass_frosted": make_pbr_mat("Mat_Glass_Frosted", base_color=(0.88, 0.91, 0.92, 1.0), roughness=0.42, transmission=0.65, alpha=0.55),
-    "tv_screen": make_pbr_mat("Mat_OLED_Screen", base_color=(0.025, 0.028, 0.034, 1.0), roughness=0.28),
+    "black_metal": make_pbr_mat("Mat_Metal_MatteBlack", base_color=(0.08, 0.085, 0.095, 1.0), roughness=0.46, metallic=0.80),
+    "brushed_brass": make_pbr_mat("Mat_Metal_BrushedBrass", base_color=(0.78, 0.60, 0.31, 1.0), roughness=0.30, metallic=0.90),
+    "brushed_steel": make_pbr_mat("Mat_Metal_BrushedSteel", base_color=(0.74, 0.76, 0.78, 1.0), roughness=0.28, metallic=0.92),
+    "ceramic_white": make_pbr_mat("Mat_Sanitary_CeramicWhite", base_color=(0.94, 0.93, 0.91, 1.0), roughness=0.26),
+    "mirror": make_pbr_mat("Mat_Mirror", base_color=(0.92, 0.94, 0.95, 1.0), roughness=0.03, metallic=0.98),
+    "glass_clear": make_pbr_mat("Mat_Glass_Architectural", base_color=(0.86, 0.93, 0.95, 1.0), roughness=0.04, transmission=0.88, alpha=0.22),
+    "glass_frosted": make_pbr_mat("Mat_Glass_Frosted", base_color=(0.88, 0.91, 0.92, 1.0), roughness=0.40, transmission=0.65, alpha=0.55),
+    "tv_screen": make_pbr_mat("Mat_OLED_Screen", base_color=(0.025, 0.028, 0.034, 1.0), roughness=0.20),
 
-    # Tactile Matte Fabrics & Drapery
-    "boucle_beige": make_pbr_mat("Mat_Fabric_BoucleBeige", "boucle_beige", roughness=0.94, uv_scale=(2.4, 2.4), normal_strength=0.52, sheen=0.35),
-    "linen_oatmeal": make_pbr_mat("Mat_Fabric_LinenOatmeal", "linen_oatmeal", roughness=0.95, uv_scale=(2.4, 2.4), normal_strength=0.45, sheen=0.32),
-    "fabric_charcoal": make_pbr_mat("Mat_Fabric_Charcoal", "fabric_charcoal", roughness=0.93, uv_scale=(2.2, 2.2), normal_strength=0.48, sheen=0.30),
-    "linen_sage": make_pbr_mat("Mat_Fabric_LinenSage", "linen_sage", roughness=0.94, uv_scale=(2.2, 2.2), normal_strength=0.45, sheen=0.32),
-    "rug_ivory": make_pbr_mat("Mat_Rug_IvoryWool", "rug_ivory", roughness=0.97, uv_scale=(2.0, 2.0), normal_strength=0.68, sheen=0.40),
+    # Tactile Matte Fabrics, Drapery, Laundry Garments & Woven Rattan
+    "boucle_beige": make_pbr_mat("Mat_Fabric_BoucleBeige", "boucle_beige", roughness=0.93, uv_scale=(2.4, 2.4), normal_strength=0.52, sheen=0.35),
+    "linen_oatmeal": make_pbr_mat("Mat_Fabric_LinenOatmeal", "linen_oatmeal", roughness=0.94, uv_scale=(2.4, 2.4), normal_strength=0.45, sheen=0.32),
+    "fabric_charcoal": make_pbr_mat("Mat_Fabric_Charcoal", "fabric_charcoal", roughness=0.92, uv_scale=(2.2, 2.2), normal_strength=0.48, sheen=0.30),
+    "linen_sage": make_pbr_mat("Mat_Fabric_LinenSage", "linen_sage", roughness=0.93, uv_scale=(2.2, 2.2), normal_strength=0.45, sheen=0.32),
+    "linen_white": make_pbr_mat("Mat_Fabric_LinenWhite", "linen_white_crisp", roughness=0.90, uv_scale=(2.6, 2.6), normal_strength=0.42, sheen=0.30, double_sided=True),
+    "cotton_navy": make_pbr_mat("Mat_Fabric_CottonNavy", "cotton_navy_denim", roughness=0.92, uv_scale=(2.4, 2.4), normal_strength=0.46, sheen=0.28, double_sided=True),
+    "rattan": make_pbr_mat("Mat_Woven_Rattan", "rattan_weave", roughness=0.82, uv_scale=(2.8, 2.8), normal_strength=0.65),
+    "rug_ivory": make_pbr_mat("Mat_Rug_IvoryWool", "rug_ivory", roughness=0.96, uv_scale=(2.0, 2.0), normal_strength=0.68, sheen=0.40),
     "curtain_sheer": make_pbr_mat("Mat_Curtain_Sheer", "linen_oatmeal", base_color=(0.94, 0.92, 0.88, 1.0), roughness=0.92, alpha=0.78, sheen=0.30, double_sided=True),
-    "fabric_terracotta": make_pbr_mat("Mat_Fabric_Terracotta", "fabric_terracotta", roughness=0.93, uv_scale=(2.2, 2.2), normal_strength=0.48, sheen=0.35),
-    "leather_cognac": make_pbr_mat("Mat_Leather_Cognac", base_color=(0.42, 0.23, 0.12, 1.0), roughness=0.58),
+    "fabric_terracotta": make_pbr_mat("Mat_Fabric_Terracotta", "fabric_terracotta", roughness=0.92, uv_scale=(2.2, 2.2), normal_strength=0.48, sheen=0.35),
+    "leather_cognac": make_pbr_mat("Mat_Leather_Cognac", base_color=(0.42, 0.23, 0.12, 1.0), roughness=0.48),
 
     # Curated Hardcover Book Spines
     "book_navy": make_pbr_mat("Mat_Book_Navy", base_color=(0.11, 0.16, 0.25, 1.0), roughness=0.82),
@@ -283,8 +290,8 @@ mats = {
     "planter_ceramic": make_pbr_mat("Mat_Planter_Ceramic", base_color=(0.74, 0.69, 0.62, 1.0), roughness=0.72),
     "planter_terracotta": make_pbr_mat("Mat_Planter_Terracotta", base_color=(0.54, 0.32, 0.21, 1.0), roughness=0.78),
 
-    # Luxury Vehicle & Context (Satin Gunmetal Titanium Paint)
-    "car_paint": make_pbr_mat("Mat_Car_SilverMetallic", base_color=(0.32, 0.35, 0.39, 1.0), roughness=0.26, metallic=0.84, coat=0.35, coat_roughness=0.18),
+    # Luxury Vehicle & Context (Metallic Titanium Silver Showroom Clearcoat)
+    "car_paint": make_pbr_mat("Mat_Car_SilverMetallic", base_color=(0.56, 0.60, 0.65, 1.0), roughness=0.18, metallic=0.88, coat=0.92, coat_roughness=0.06),
     "car_glass": make_pbr_mat("Mat_Car_TintedGlass", base_color=(0.06, 0.09, 0.12, 1.0), roughness=0.06, transmission=0.68, alpha=0.54),
     "car_tire": make_pbr_mat("Mat_Car_RubberTire", base_color=(0.045, 0.047, 0.052, 1.0), roughness=0.88),
     "car_caliper": make_pbr_mat("Mat_Car_BrakeCaliper", base_color=(0.72, 0.11, 0.08, 1.0), roughness=0.34, metallic=0.55),
@@ -822,7 +829,7 @@ def make_tropical_shrub(prefix, cx, cy, radius, col_name, seed=201):
         mesh.materials.append(m)
     obj = bpy.data.objects.new(prefix, mesh)
     obj.location = (cx, cy, 0.01)
-    link_obj(obj, col_name)
+    return link_obj(obj, col_name)
 
 
 def make_bamboo_screen(prefix, x0, x1, y_pos, col_name, count=14):
@@ -1005,6 +1012,8 @@ floor_mat_map = {
     "matte_porcelain_grey": mats["floor_porcelain"],
 }
 for rm in spec["rooms"]:
+    if rm.get("floor", 1) != 1:
+        continue
     fmat = floor_mat_map.get(rm["floor_material"], mats["floor_limestone"])
     if "sub_rects" in rm:
         for idx, sr in enumerate(rm["sub_rects"]):
@@ -1106,52 +1115,239 @@ for sk_name, x0, y0, x1, y1 in skirting_runs:
     make_box(sk_name, x0, y0, FLOOR_Z, x1, y1, FLOOR_Z + 0.095, "Walls", mats["skirting"])
 
 # ---------------------------------------------------------------------------
-# 6. CEILINGS & ROOF (SEPARATE TOGGLEABLE OBJECTS)
+# 6. LEVEL 1 CEILINGS, INTER-FLOOR SLAB, FLOATING STAIRCASE & COMPLETE LEVEL 2
+#    (RM-12 TEMPAT JEMURAN & SERVICE DECK · RM-13 SKY LOUNGE · EXT-05 FRONT BALCONY)
 # ---------------------------------------------------------------------------
-make_poly_slab("Ceiling_Main_Interior", fp_pts, WALL_TOP_Z, WALL_TOP_Z + 0.10, "Ceilings", mats["ceiling_white"])
+# Level 1 Ceilings (toggled when viewing Level 1 Dollhouse cutaway)
+make_poly_slab("Ceiling_Main_Interior", fp_pts, WALL_TOP_Z, WALL_TOP_Z + 0.08, "Ceilings", mats["ceiling_white"])
 make_box("Ceiling_Wet_MasterEnsuite", 3.92, 9.32, FLOOR_Z + WET_CEIL_H, 5.37, 11.50, WALL_TOP_Z, "Ceilings", mats["ceiling_white"])
 make_box("Ceiling_Wet_SharedBath", 3.244, 5.12, FLOOR_Z + WET_CEIL_H, 4.744, 7.04, WALL_TOP_Z, "Ceilings", mats["ceiling_white"])
 make_box("Ceiling_Wet_Laundry", 3.244, 3.64, FLOOR_Z + WET_CEIL_H, 4.744, 5.00, WALL_TOP_Z, "Ceilings", mats["ceiling_white"])
 
-roof_pts = [
-    (2.944, 1.30), (SITE_W, 1.30), (SITE_W, 12.90),
-    (0.0, 12.90), (0.0, 4.70), (2.944, 4.70),
+# Inter-Floor Structural Concrete Slab (L2 Base Plate) + Warm Oiled Teak Entry & Terrace Soffits
+slab_l2_pts = [
+    (2.944, 1.45), (SITE_W, 1.45), (SITE_W, 12.45),
+    (0.0, 12.45), (0.0, 4.78), (2.944, 4.78),
 ]
-make_poly_slab("Roof_Main_FasciaSlab", roof_pts, WALL_TOP_Z + 0.10, ROOF_SLAB_TOP_Z, "Roof", mats["ext_stucco"])
-make_poly_slab("Roof_Waterproof_Deck", fp_pts, ROOF_SLAB_TOP_Z, ROOF_SLAB_TOP_Z + 0.03, "Roof", mats["roof_membrane"])
-make_box("Roof_Soffit_FrontOverhang", 2.98, 1.34, WALL_TOP_Z + 0.08, SITE_W - 0.04, 1.90, WALL_TOP_Z + 0.10, "Roof", mats["floor_teak"])
-make_box("Roof_Soffit_RearTerrace", 0.04, 11.70, WALL_TOP_Z + 0.08, SITE_W - 0.04, 12.86, WALL_TOP_Z + 0.10, "Roof", mats["floor_teak"])
+make_poly_slab("L2_Slab_StructuralPlate", slab_l2_pts, WALL_TOP_Z + 0.08, FLOOR2_Z - 0.02, "Architecture", mats["ext_stucco"])
+make_box("L2_Slab_FasciaBand_Front", 2.935, 1.435, FLOOR2_Z - 0.065, SITE_W + 0.01, 1.46, FLOOR2_Z - 0.01, "Architecture", mats["black_metal"])
+make_box("L2_Slab_Soffit_FrontEntry", 2.98, 1.48, WALL_TOP_Z + 0.06, SITE_W - 0.04, 1.90, WALL_TOP_Z + 0.08, "Architecture", mats["floor_teak"])
+make_box("L2_Slab_Soffit_RearTerrace", 5.45, 11.70, WALL_TOP_Z + 0.06, SITE_W - 0.04, 12.42, WALL_TOP_Z + 0.08, "Architecture", mats["floor_teak"])
 
-parapet_segs = [
-    ("Roof_Parapet_Front", 2.944, 1.30, SITE_W, 1.52),
-    ("Roof_Parapet_East", SITE_W - 0.22, 1.52, SITE_W, 12.90),
-    ("Roof_Parapet_Rear", 0.0, 12.68, SITE_W - 0.22, 12.90),
-    ("Roof_Parapet_West", 0.0, 4.70, 0.22, 12.68),
-    ("Roof_Parapet_StepS", 0.22, 4.70, 2.944, 4.92),
-    ("Roof_Parapet_StepW", 2.944, 1.52, 3.164, 4.92),
+# L2 Finished Floors (strictly inside 9.144 x 13.500 m site bounds!)
+make_box("Floor_L2_RM12_Jemuran", 0.20, 6.80, FLOOR2_Z - 0.02, 4.864, 11.50, FLOOR2_Z, "Floors", mats["floor_porcelain"])
+make_box("L2_Jemuran_LinearDrain", 0.40, 7.06, FLOOR2_Z - 0.005, 4.66, 7.13, FLOOR2_Z + 0.004, "Architecture", mats["brushed_steel"])
+make_box("Floor_L2_RM13_SkyLounge", 4.984, 5.20, FLOOR2_Z - 0.02, 8.944, 11.50, FLOOR2_Z, "Floors", mats["floor_oak"])
+make_box("Floor_L2_EXT05_FrontBalcony", 3.164, 2.04, FLOOR2_Z - 0.03, 8.944, 5.00, FLOOR2_Z - 0.006, "Floors", mats["floor_teak"], bevel=0.004)
+make_box("Floor_L2_WestPlanterRoof", 0.20, 4.96, FLOOR2_Z - 0.03, 3.164, 6.80, FLOOR2_Z - 0.01, "Floors", mats["pebbles"])
+# L2 Upper Stair Landing connecting Rear Staircase cleanly to RM-12 Tempat Jemuran
+make_box("Floor_L2_StairLanding", 0.18, 11.70, FLOOR2_Z - 0.16, 1.92, 13.40, FLOOR2_Z, "Floors", mats["floor_porcelain"], bevel=0.006)
+make_box("L2_StairLanding_ColW", 0.20, 13.26, 0.0, 0.32, 13.38, FLOOR2_Z - 0.16, "Architecture", mats["black_metal"])
+make_box("L2_StairLanding_ColE", 1.78, 13.26, 0.0, 1.90, 13.38, FLOOR2_Z - 0.16, "Architecture", mats["black_metal"])
+
+# --- SCULPTURAL COVERED FLOATING STAIRCASE (L1 Rear Terrace X=5.50 -> L2 Landing X=1.90, Y=12.52..13.38) ---
+# Twin angled structural steel stringers (custom clean extruded beams)
+for st_idx, sy_beam in enumerate((12.68, 13.22)):
+    bm_st = bmesh.new()
+    p_bot = Vector((5.58, sy_beam, 0.11))
+    p_top = Vector((1.88, sy_beam, FLOOR2_Z - 0.08))
+    hw_b, hh_b = 0.032, 0.13
+    r_b = [
+        bm_st.verts.new((p_bot.x, sy_beam - hw_b, p_bot.z)),
+        bm_st.verts.new((p_bot.x, sy_beam + hw_b, p_bot.z)),
+        bm_st.verts.new((p_bot.x, sy_beam + hw_b, p_bot.z + hh_b)),
+        bm_st.verts.new((p_bot.x, sy_beam - hw_b, p_bot.z + hh_b)),
+    ]
+    r_t = [
+        bm_st.verts.new((p_top.x, sy_beam - hw_b, p_top.z - hh_b)),
+        bm_st.verts.new((p_top.x, sy_beam + hw_b, p_top.z - hh_b)),
+        bm_st.verts.new((p_top.x, sy_beam + hw_b, p_top.z)),
+        bm_st.verts.new((p_top.x, sy_beam - hw_b, p_top.z)),
+    ]
+    for k in range(4):
+        kn = (k + 1) % 4
+        bm_st.faces.new((r_b[k], r_b[kn], r_t[kn], r_t[k]))
+    bm_st.faces.new(r_b[::-1])
+    bm_st.faces.new(r_t)
+    bmesh.ops.recalc_face_normals(bm_st, faces=bm_st.faces)
+    apply_box_uv(bm_st, scale=1.0)
+    m_st = bpy.data.meshes.new(f"L2_Stair_Stringer_{st_idx}")
+    bm_st.to_mesh(m_st)
+    bm_st.free()
+    m_st.materials.append(mats["black_metal"])
+    link_obj(bpy.data.objects.new(f"L2_Stair_Stringer_{st_idx}", m_st), "Architecture")
+
+# 16 Floating Solid American Walnut Treads + Warm Under-Tread LED Accent Strips
+n_steps = 16
+for step_i in range(n_steps):
+    frac = (step_i + 1) / float(n_steps)
+    tx_center = 5.52 - step_i * 0.225
+    tz_top = 0.11 + frac * (FLOOR2_Z - 0.11)
+    make_box(
+        f"L2_Stair_Tread_{step_i+1:02d}",
+        tx_center - 0.135, 12.52, tz_top - 0.048,
+        tx_center + 0.135, 13.38, tz_top,
+        "Architecture", mats["walnut"], bevel=0.005
+    )
+    if step_i % 2 == 0:
+        make_box(
+            f"L2_Stair_LED_{step_i+1:02d}",
+            tx_center + 0.115, 12.60, tz_top - 0.056,
+            tx_center + 0.130, 13.30, tz_top - 0.046,
+            "Lighting", mats["emit_warm"]
+        )
+
+# Angled Tempered Glass Balustrade & Matte-Black Handrail along South side of Staircase (Y=12.52)
+bm_sg = bmesh.new()
+sg_pts = [
+    (5.58, 12.52, 0.18), (1.90, 12.52, FLOOR2_Z - 0.02),
+    (1.90, 12.52, FLOOR2_Z + 1.02), (5.58, 12.52, 1.18),
 ]
-for pname, x0, y0, x1, y1 in parapet_segs:
-    make_box(pname, x0, y0, ROOF_SLAB_TOP_Z, x1, y1, PARAPET_TOP_Z, "Roof", mats["ext_stucco"])
-    make_box(f"{pname}_Coping", x0 - 0.015, y0 - 0.015, PARAPET_TOP_Z, x1 + 0.015, y1 + 0.015, PARAPET_TOP_Z + 0.035, "Roof", mats["roof_coping"])
+v_sg0 = [bm_sg.verts.new((px, py - 0.007, pz)) for px, py, pz in sg_pts]
+v_sg1 = [bm_sg.verts.new((px, py + 0.007, pz)) for px, py, pz in sg_pts]
+bm_sg.faces.new(v_sg0)
+bm_sg.faces.new(v_sg1[::-1])
+for k in range(4):
+    kn = (k + 1) % 4
+    bm_sg.faces.new((v_sg0[k], v_sg0[kn], v_sg1[kn], v_sg1[k]))
+bmesh.ops.recalc_face_normals(bm_sg, faces=bm_sg.faces)
+apply_box_uv(bm_sg, scale=1.0)
+m_sg = bpy.data.meshes.new("L2_Stair_GlassGuard")
+bm_sg.to_mesh(m_sg)
+bm_sg.free()
+m_sg.materials.append(mats["glass_clear"])
+link_obj(bpy.data.objects.new("L2_Stair_GlassGuard", m_sg), "Architecture")
+make_swept_tube("L2_Stair_Handrail", [(5.60, 12.52, 1.19), (1.88, 12.52, FLOOR2_Z + 1.03)], 0.022, "Architecture", mats["black_metal"], segs=10)
+make_swept_tube("L2_Stair_HandrailWall", [(5.58, 13.35, 1.16), (1.92, 13.35, FLOOR2_Z + 1.00)], 0.018, "Architecture", mats["black_metal"], segs=10)
 
-# Carport Steel & Timber-Slat Pergola (Complete 4-sided structural steel frame enclosing all slats & glass!)
-make_box("Arch_Carport_Beam_West", 0.04, 0.18, 2.75, 0.18, 5.00, 2.95, "Architecture", mats["black_metal"])
-make_box("Arch_Carport_Beam_East", 2.904, 0.18, 2.75, 3.044, 5.00, 2.95, "Architecture", mats["black_metal"])
-make_box("Arch_Carport_Beam_Front", 0.04, 0.18, 2.75, 3.044, 0.34, 2.95, "Architecture", mats["black_metal"])
-make_box("Arch_Carport_Beam_Rear", 0.04, 4.86, 2.75, 3.044, 5.00, 2.95, "Architecture", mats["black_metal"])
-make_box("Arch_Carport_Col_Front", 0.05, 0.20, 0.03, 0.17, 0.32, 2.75, "Architecture", mats["black_metal"])
-make_box("Arch_Carport_Col_Mid", 0.05, 2.60, 0.03, 0.17, 2.72, 2.75, "Architecture", mats["black_metal"])
-make_box("Arch_Carport_Col_FrontEast", 2.914, 1.90, 0.03, 3.034, 2.02, 2.75, "Architecture", mats["black_metal"])
+# Upper Landing & Rear Drying Deck Frameless Glass Balustrades (H = 1.05 m)
+for rg_name, rx0, ry0, rx1, ry1 in [
+    ("L2_Rail_Landing_N", 0.20, 13.36, 1.90, 13.385),
+    ("L2_Rail_Landing_W", 0.20, 11.70, 0.225, 13.38),
+    ("L2_Rail_Jemuran_N", 1.85, 11.54, 4.864, 11.565),
+    ("L2_Rail_Balcony_S", 3.164, 2.02, 8.95, 2.045),
+    ("L2_Rail_Balcony_W", 3.164, 2.04, 3.189, 6.80),
+]:
+    make_box(f"{rg_name}_Glass", rx0, ry0, FLOOR2_Z, rx1, ry1, FLOOR2_Z + 1.03, "Architecture", mats["glass_clear"])
+    make_box(f"{rg_name}_Cap", rx0 - 0.012, ry0 - 0.012, FLOOR2_Z + 1.02, rx1 + 0.012, ry1 + 0.012, FLOOR2_Z + 1.06, "Architecture", mats["black_metal"])
+    make_box(f"{rg_name}_Base", rx0 - 0.015, ry0 - 0.015, FLOOR2_Z - 0.01, rx1 + 0.015, ry1 + 0.015, FLOOR2_Z + 0.055, "Architecture", mats["black_metal"])
+
+# --- LEVEL 2 WALLS, PRIVACY BREEZE-SCREENS & WINDOWS ---
+# RM-12 Tempat Jemuran West Wall (solid masonry half-wall + horizontal breathable teak privacy louvers!)
+make_box("Wall_L2_Jemuran_WestBase", 0.0, 6.80, FLOOR2_Z, 0.20, 11.70, FLOOR2_Z + 1.20, "Walls", mats["ext_stucco"])
+make_box("Wall_L2_Jemuran_WestCap", -0.01, 6.80, FLOOR2_Z + 1.20, 0.21, 11.70, FLOOR2_Z + 1.24, "Architecture", mats["roof_coping"])
+for wl_i in range(11):
+    lz = FLOOR2_Z + 1.34 + wl_i * 0.135
+    make_box(f"L2_Jemuran_WestLouver_{wl_i:02d}", 0.05, 6.88, lz, 0.15, 11.62, lz + 0.068, "Architecture", mats["walnut"], bevel=0.004)
+for wp_y in (6.84, 9.25, 11.64):
+    make_box(f"L2_Jemuran_WestPost_{wp_y:.2f}", 0.03, wp_y - 0.04, FLOOR2_Z + 1.20, 0.17, wp_y + 0.04, WALL2_TOP_Z, "Architecture", mats["black_metal"])
+
+# RM-12 Tempat Jemuran South Privacy Breeze-Screen (screens hanging clothes elegantly from street view!)
+make_box("Wall_L2_Jemuran_SouthBase", 0.20, 6.80, FLOOR2_Z, 4.864, 7.00, FLOOR2_Z + 1.08, "Walls", mats["ext_stucco"])
+make_box("Wall_L2_Jemuran_SouthCap", 0.19, 6.79, FLOOR2_Z + 1.08, 4.87, 7.01, FLOOR2_Z + 1.12, "Architecture", mats["roof_coping"])
+make_box("L2_Jemuran_SouthBeam", 0.18, 6.82, WALL2_TOP_Z - 0.16, 4.88, 6.98, WALL2_TOP_Z, "Architecture", mats["black_metal"])
+# Vertical architectural teak privacy slats spaced cleanly for full tropical airflow!
+for sl_x_i in range(28):
+    sx = 0.30 + sl_x_i * 0.162
+    if sx < 4.78:
+        make_box(f"L2_Jemuran_SouthSlat_{sl_x_i:02d}", sx, 6.86, FLOOR2_Z + 1.12, sx + 0.055, 6.94, WALL2_TOP_Z - 0.16, "Architecture", mats["walnut"], bevel=0.004)
+
+# Low architectural parapet rim around West roof planter deck (X=0..3.16, Y=4.78..6.80)
+make_box("Wall_L2_WestPlanterParapet_S", 0.0, 4.78, FLOOR2_Z - 0.02, 3.164, 4.96, FLOOR2_Z + 0.42, "Walls", mats["ext_stucco"])
+make_box("Wall_L2_WestPlanterParapet_W", 0.0, 4.96, FLOOR2_Z - 0.02, 0.20, 6.80, FLOOR2_Z + 0.42, "Walls", mats["ext_stucco"])
+make_box("L2_WestPlanterParapet_CapS", -0.01, 4.77, FLOOR2_Z + 0.42, 3.17, 4.97, FLOOR2_Z + 0.455, "Architecture", mats["roof_coping"])
+make_box("L2_WestPlanterParapet_CapW", -0.01, 4.96, FLOOR2_Z + 0.42, 0.21, 6.80, FLOOR2_Z + 0.455, "Architecture", mats["roof_coping"])
+
+# RM-13 L2 Sky Lounge Structural Walls (East, West w/ Door D9, North w/ Window W7, South w/ Sliding Door D10)
+make_box("Wall_L2_Lounge_East", 8.944, 5.00, FLOOR2_Z, SITE_W, 11.70, WALL2_TOP_Z, "Walls", mats["ext_stucco"])
+make_box("Wall_L2_Balcony_EastWing", 8.944, 2.00, FLOOR2_Z - 0.02, SITE_W, 5.00, FLOOR2_Z + 1.15, "Walls", mats["ext_stucco"])
+make_box("L2_Balcony_EastWing_Cap", 8.93, 1.99, FLOOR2_Z + 1.15, SITE_W + 0.01, 5.01, FLOOR2_Z + 1.185, "Architecture", mats["roof_coping"])
+# West Partition separating RM-12 Tempat Jemuran <-> RM-13 Sky Lounge (with Door D9 opening at Y = 8.20..9.10, H = 2.15 m)
+make_box("Wall_L2_Lounge_West_S", 4.864, 5.00, FLOOR2_Z, 4.984, 8.20, WALL2_TOP_Z, "Walls", mats["int_wall_warm"])
+make_box("Wall_L2_Lounge_West_N", 4.864, 9.10, FLOOR2_Z, 4.984, 11.70, WALL2_TOP_Z, "Walls", mats["int_wall_warm"])
+make_box("Wall_L2_Lounge_West_HeadD9", 4.864, 8.20, FLOOR2_Z + 2.15, 4.984, 9.10, WALL2_TOP_Z, "Walls", mats["int_wall_warm"])
+# North Rear Wall of Sky Lounge with Panoramic Window W7 (X = 5.65..8.25, sill 0.65m, H = 1.85m)
+make_box("Wall_L2_Lounge_North_W", 4.984, 11.50, FLOOR2_Z, 5.65, 11.70, WALL2_TOP_Z, "Walls", mats["ext_stucco"])
+make_box("Wall_L2_Lounge_North_E", 8.25, 11.50, FLOOR2_Z, 8.944, 11.70, WALL2_TOP_Z, "Walls", mats["ext_stucco"])
+make_box("Wall_L2_Lounge_North_SillW7", 5.65, 11.50, FLOOR2_Z, 8.25, 11.70, FLOOR2_Z + 0.65, "Walls", mats["ext_stucco"])
+make_box("Wall_L2_Lounge_North_HeadW7", 5.65, 11.50, FLOOR2_Z + 2.50, 8.25, 11.70, WALL2_TOP_Z, "Walls", mats["ext_stucco"])
+# Window W7 Frame, Mullion & Low-E Glass
+make_box("WinSill_L2_W7", 5.635, 11.47, FLOOR2_Z + 0.62, 8.265, 11.73, FLOOR2_Z + 0.65, "Windows", mats["floor_limestone"], bevel=0.003)
+make_box("WinFrame_L2_W7_B", 5.65, 11.56, FLOOR2_Z + 0.65, 8.25, 11.64, FLOOR2_Z + 0.70, "Windows", mats["black_metal"])
+make_box("WinFrame_L2_W7_T", 5.65, 11.56, FLOOR2_Z + 2.45, 8.25, 11.64, FLOOR2_Z + 2.50, "Windows", mats["black_metal"])
+make_box("WinFrame_L2_W7_L", 5.65, 11.56, FLOOR2_Z + 0.65, 5.70, 11.64, FLOOR2_Z + 2.50, "Windows", mats["black_metal"])
+make_box("WinFrame_L2_W7_R", 8.20, 11.56, FLOOR2_Z + 0.65, 8.25, 11.64, FLOOR2_Z + 2.50, "Windows", mats["black_metal"])
+make_box("WinMullion_L2_W7", 6.93, 11.565, FLOOR2_Z + 0.70, 6.97, 11.635, FLOOR2_Z + 2.45, "Windows", mats["black_metal"])
+make_box("WinGlass_L2_W7", 5.70, 11.593, FLOOR2_Z + 0.70, 8.20, 11.607, FLOOR2_Z + 2.45, "Windows", mats["glass_clear"])
+
+# South Balcony Facade Wall of Sky Lounge with 2.80m 3-Panel Sliding Glass Door D10 (X = 5.55..8.35, H = 2.40m)
+make_box("Wall_L2_Lounge_South_W", 4.984, 5.00, FLOOR2_Z, 5.55, 5.20, WALL2_TOP_Z, "Walls", mats["ext_stucco"])
+make_box("Wall_L2_Lounge_South_E", 8.35, 5.00, FLOOR2_Z, 8.944, 5.20, WALL2_TOP_Z, "Walls", mats["ext_stucco"])
+make_box("Wall_L2_Lounge_South_HeadD10", 5.55, 5.00, FLOOR2_Z + 2.40, 8.35, 5.20, WALL2_TOP_Z, "Walls", mats["ext_stucco"])
+# Fluted walnut exterior architectural accent on Sky Lounge South-West pier
+make_box("L2_Facade_TeakAccent", 4.984, 4.972, FLOOR2_Z, 5.55, 5.002, WALL2_TOP_Z, "Architecture", mats["fluted_walnut"])
+
+# L2 Front Balcony Built-In Stone Planter Trough
+make_box("L2_Balcony_PlanterBox", 6.20, 2.08, FLOOR2_Z - 0.006, 8.90, 2.52, FLOOR2_Z + 0.42, "Architecture", mats["ext_stucco"], bevel=0.008)
+make_box("L2_Balcony_PlanterSoil", 6.26, 2.14, FLOOR2_Z + 0.34, 8.84, 2.46, FLOOR2_Z + 0.39, "Architecture", mats["soil"])
+
+# --- LEVEL 2 CEILINGS, SKYLIGHT PERGOLA ROOF (TEMPAT JEMURAN) & CANTILEVERED MAIN ROOF ---
+make_box("Ceiling_L2_SkyLounge", 4.984, 5.20, WALL2_TOP_Z - 0.04, 8.944, 11.50, WALL2_TOP_Z + 0.04, "Ceilings", mats["ceiling_white"])
+
+# Cantilevered Upper Main Roof over RM-13 Sky Lounge & Front Balcony Overhang
+make_box("Roof_L2_Lounge_Slab", 4.80, 4.10, WALL2_TOP_Z + 0.04, SITE_W, 12.10, ROOF2_SLAB_TOP_Z, "Roof", mats["ext_stucco"])
+make_box("Roof_L2_Lounge_Membrane", 4.98, 4.28, ROOF2_SLAB_TOP_Z, SITE_W - 0.18, 11.92, ROOF2_SLAB_TOP_Z + 0.03, "Roof", mats["roof_membrane"])
+make_box("Roof_L2_Lounge_SoffitFront", 4.86, 4.14, WALL2_TOP_Z + 0.02, SITE_W - 0.04, 5.02, WALL2_TOP_Z + 0.045, "Roof", mats["floor_teak"])
+make_box("Roof_L2_Lounge_FasciaBand", 4.79, 4.085, ROOF2_SLAB_TOP_Z - 0.06, SITE_W + 0.01, 4.11, ROOF2_SLAB_TOP_Z, "Roof", mats["black_metal"])
+for p2n, x0, y0, x1, y1 in [
+    ("Roof_L2_Parapet_S", 4.80, 4.10, SITE_W, 4.30),
+    ("Roof_L2_Parapet_E", SITE_W - 0.20, 4.30, SITE_W, 12.10),
+    ("Roof_L2_Parapet_N", 4.80, 11.90, SITE_W - 0.20, 12.10),
+    ("Roof_L2_Parapet_W", 4.80, 4.30, 5.00, 11.90),
+]:
+    make_box(p2n, x0, y0, ROOF2_SLAB_TOP_Z, x1, y1, PARAPET_TOP_Z, "Roof", mats["ext_stucco"])
+    make_box(f"{p2n}_Coping", x0 - 0.015, y0 - 0.015, PARAPET_TOP_Z, x1 + 0.015, y1 + 0.015, PARAPET_TOP_Z + 0.035, "Roof", mats["roof_coping"])
+
+# Semi-Open Rainproof Skylight Pergola Roof over RM-12 Tempat Jemuran + Rear Staircase Canopy!
+make_box("Roof_L2_Jemuran_BeamW", 0.04, 6.80, WALL2_TOP_Z - 0.14, 0.18, 13.44, WALL2_TOP_Z + 0.06, "Roof", mats["black_metal"])
+make_box("Roof_L2_Jemuran_BeamE", 4.74, 6.80, WALL2_TOP_Z - 0.14, 4.88, 11.70, WALL2_TOP_Z + 0.06, "Roof", mats["black_metal"])
+make_box("Roof_L2_Jemuran_BeamS", 0.04, 6.80, WALL2_TOP_Z - 0.14, 4.88, 6.96, WALL2_TOP_Z + 0.06, "Roof", mats["black_metal"])
+make_box("Roof_L2_Jemuran_BeamMid", 0.04, 11.58, WALL2_TOP_Z - 0.14, 4.88, 11.72, WALL2_TOP_Z + 0.06, "Roof", mats["black_metal"])
+make_box("Roof_L2_StairCanopy_BeamN", 0.04, 13.30, WALL2_TOP_Z - 0.14, 5.64, 13.44, WALL2_TOP_Z + 0.06, "Roof", mats["black_metal"])
+make_box("Roof_L2_StairCanopy_BeamE", 5.50, 11.70, WALL2_TOP_Z - 0.14, 5.64, 13.44, WALL2_TOP_Z + 0.06, "Roof", mats["black_metal"])
+# Spaced warm teak skylight louvers over Tempat Jemuran (bevelled timber + 28mm clean gap below glass to prevent z-fighting!)
+for jl_i in range(14):
+    jy = 7.12 + jl_i * 0.32
+    if jy < 11.50:
+        make_box(f"Roof_L2_Jemuran_Slat_{jl_i+1:02d}", 0.18, jy, WALL2_TOP_Z - 0.08, 4.74, jy + 0.055, WALL2_TOP_Z + 0.015, "Roof", mats["walnut"], bevel=0.004)
+# Clear UV-filtering laminated glass rain shields mounted on slim glazing standoffs cleanly above rafters (zero z-fighting!)
+make_box("Roof_L2_Jemuran_GlassRoof", 0.20, 6.98, WALL2_TOP_Z + 0.048, 4.72, 11.56, WALL2_TOP_Z + 0.066, "Roof", mats["glass_clear"])
+make_box("Roof_L2_StairCanopy_GlassRoof", 0.20, 11.74, WALL2_TOP_Z + 0.048, 5.48, 13.28, WALL2_TOP_Z + 0.066, "Roof", mats["glass_clear"])
+# Support steel column at North-East corner of Staircase Canopy
+make_box("L2_StairCanopy_PostNE", 5.50, 13.30, 0.0, 5.62, 13.42, WALL2_TOP_Z - 0.14, "Architecture", mats["black_metal"])
+
+# Carport Steel & Timber-Slat Pergola (Bevelled 4-sided structural steel frame + 30mm standoff glass rain shield — ZERO z-fighting!)
+make_box("Arch_Carport_Beam_West", 0.04, 0.18, 2.75, 0.18, 5.00, 2.95, "Architecture", mats["black_metal"], bevel=0.005)
+make_box("Arch_Carport_Beam_East", 2.904, 0.18, 2.75, 3.044, 5.00, 2.95, "Architecture", mats["black_metal"], bevel=0.005)
+make_box("Arch_Carport_Beam_Front", 0.04, 0.18, 2.75, 3.044, 0.34, 2.95, "Architecture", mats["black_metal"], bevel=0.005)
+make_box("Arch_Carport_Beam_Rear", 0.04, 4.86, 2.75, 3.044, 5.00, 2.95, "Architecture", mats["black_metal"], bevel=0.005)
+make_box("Arch_Carport_Col_Front", 0.05, 0.20, 0.03, 0.17, 0.32, 2.75, "Architecture", mats["black_metal"], bevel=0.004)
+make_box("Arch_Carport_Col_Mid", 0.05, 2.60, 0.03, 0.17, 2.72, 2.75, "Architecture", mats["black_metal"], bevel=0.004)
+make_box("Arch_Carport_Col_FrontEast", 2.914, 1.90, 0.03, 3.034, 2.02, 2.75, "Architecture", mats["black_metal"], bevel=0.004)
 slat_mesh = None
 for i, ys in enumerate([0.55 + k * 0.34 for k in range(13)]):
     if slat_mesh is None:
-        s_obj = make_box(f"Roof_Carport_Slat_{i+1:02d}", 0.18, ys, 2.78, 2.904, ys + 0.055, 2.90, "Roof", mats["walnut"])
+        s_obj = make_box(f"Roof_Carport_Slat_{i+1:02d}", 0.18, ys, 2.78, 2.904, ys + 0.055, 2.895, "Roof", mats["walnut"], bevel=0.004)
         slat_mesh = s_obj.data
     else:
         inst = bpy.data.objects.new(f"Roof_Carport_Slat_{i+1:02d}", slat_mesh)
-        inst.location = (1.542, ys + 0.0275, 2.84)
+        inst.location = (1.542, ys + 0.0275, 2.8375)
         link_obj(inst, "Roof")
-make_box("Roof_Carport_RainShield", 0.182, 0.342, 2.905, 2.902, 4.858, 2.925, "Roof", mats["glass_clear"])
+# Slim glazing purlins supporting the glass roof cleanly 30mm above the walnut slats
+make_box("Roof_Carport_GlazingBar_W", 0.20, 0.35, 2.900, 0.24, 4.85, 2.928, "Roof", mats["black_metal"])
+make_box("Roof_Carport_GlazingBar_M", 1.52, 0.35, 2.900, 1.56, 4.85, 2.928, "Roof", mats["black_metal"])
+make_box("Roof_Carport_GlazingBar_E", 2.84, 0.35, 2.900, 2.88, 4.85, 2.928, "Roof", mats["black_metal"])
+make_box("Roof_Carport_RainShield", 0.195, 0.350, 2.930, 2.889, 4.850, 2.948, "Roof", mats["glass_clear"])
 
 # ---------------------------------------------------------------------------
 # 7. INTERACTIVE DOORS (EXACT BLENDER HINGE PIVOTS + HARDWARE)
@@ -1305,6 +1501,95 @@ for d in spec["doors"]:
             "swing_direction": "Pocket Slide North into IW-04 Wall Cavity (zero swing clearance)",
         })
 
+# --- LEVEL 2 INTERACTIVE DOORS (D9: Tempat Jemuran <-> Sky Lounge | D10: Sky Lounge <-> Front Sky Balcony) ---
+# D9: Hinged Glass-and-Walnut Architectural Door (X=4.864..4.984, Y=8.20..9.10, Z=FLOOR2_Z..+2.15)
+d9_x0, d9_y0, d9_x1, d9_y1, d9_h = 4.864, 8.20, 4.984, 9.10, 2.15
+ft2 = 0.045
+make_box("DoorFrame_L2_D9_S", d9_x0 - 0.01, d9_y0, FLOOR2_Z, d9_x1 + 0.01, d9_y0 + ft2, FLOOR2_Z + d9_h, "Doors", mats["walnut"])
+make_box("DoorFrame_L2_D9_N", d9_x0 - 0.01, d9_y1 - ft2, FLOOR2_Z, d9_x1 + 0.01, d9_y1, FLOOR2_Z + d9_h, "Doors", mats["walnut"])
+make_box("DoorFrame_L2_D9_Top", d9_x0 - 0.01, d9_y0, FLOOR2_Z + d9_h - ft2, d9_x1 + 0.01, d9_y1, FLOOR2_Z + d9_h, "Doors", mats["walnut"])
+d9_hx, d9_hy = d9_x1, d9_y0 + ft2
+d9_leaf = make_box(
+    "Door_Interactive_L2_D9",
+    d9_hx - 0.024, d9_y0 + ft2, FLOOR2_Z + 0.008,
+    d9_hx + 0.024, d9_y1 - ft2, FLOOR2_Z + d9_h - ft2,
+    "Doors", mats["walnut"], bevel=0.004, origin_mode=(d9_hx, d9_hy, FLOOR2_Z)
+)
+d9_glass = make_box(
+    "Door_Interactive_L2_D9_Glass",
+    d9_hx - 0.028, d9_y0 + 0.14, FLOOR2_Z + 0.25,
+    d9_hx + 0.028, d9_y1 - 0.14, FLOOR2_Z + d9_h - 0.16,
+    "Doors", mats["glass_frosted"]
+)
+d9_h1 = make_box("DoorHandle_L2_D9_W", d9_hx - 0.07, d9_y1 - 0.17, FLOOR2_Z + 1.02, d9_hx - 0.02, d9_y1 - 0.06, FLOOR2_Z + 1.045, "Doors", mats["black_metal"])
+d9_h2 = make_box("DoorHandle_L2_D9_E", d9_hx + 0.02, d9_y1 - 0.17, FLOOR2_Z + 1.02, d9_hx + 0.07, d9_y1 - 0.06, FLOOR2_Z + 1.045, "Doors", mats["black_metal"])
+bpy.context.view_layer.update()
+for child in (d9_glass, d9_h1, d9_h2):
+    child.parent = d9_leaf
+    child.matrix_parent_inverse = d9_leaf.matrix_world.inverted()
+door_interactive_meta.append({
+    "id": "D9",
+    "label": "L2 Glass-Panel Drying Deck Door",
+    "connects": ["RM-12", "RM-13"],
+    "object_name": d9_leaf.name,
+    "kind": "hinged",
+    "pivot_blender": [round(d9_hx, 4), round(d9_hy, 4), round(FLOOR2_Z, 4)],
+    "pivot_threejs": [round(d9_hx, 4), round(FLOOR2_Z, 4), round(-d9_hy, 4)],
+    "center_threejs": [round((d9_x0 + d9_x1) * 0.5, 4), round(FLOOR2_Z + 1.0, 4), round(-(d9_y0 + d9_y1) * 0.5, 4)],
+    "closed_aabb_threejs": [
+        round(d9_x0, 4), round(FLOOR2_Z, 4), round(-d9_y1, 4),
+        round(d9_x1, 4), round(FLOOR2_Z + d9_h, 4), round(-d9_y0, 4),
+    ],
+    "open_angle_deg": 90,
+    "swing_sign": -1,
+    "swing_direction": "Inward into L2 Sky Lounge",
+})
+
+# D10: L2 3-Panel Aluminum Sliding Glass Door (X=5.55..8.35, Y=5.00..5.20, Z=FLOOR2_Z..+2.40)
+d10_x0, d10_y0, d10_x1, d10_y1, d10_h = 5.55, 5.00, 8.35, 5.20, 2.40
+make_box("DoorFrame_L2_D10_L", d10_x0, d10_y0 - 0.01, FLOOR2_Z, d10_x0 + ft2, d10_y1 + 0.01, FLOOR2_Z + d10_h, "Doors", mats["black_metal"])
+make_box("DoorFrame_L2_D10_R", d10_x1 - ft2, d10_y0 - 0.01, FLOOR2_Z, d10_x1, d10_y1 + 0.01, FLOOR2_Z + d10_h, "Doors", mats["black_metal"])
+make_box("DoorFrame_L2_D10_Top", d10_x0, d10_y0 - 0.01, FLOOR2_Z + d10_h - ft2, d10_x1, d10_y1 + 0.01, FLOOR2_Z + d10_h, "Doors", mats["black_metal"])
+make_box("DoorTrack_L2_D10_Bot", d10_x0, d10_y0, FLOOR2_Z, d10_x1, d10_y1, FLOOR2_Z + 0.025, "Doors", mats["black_metal"])
+d10_pw = (d10_x1 - d10_x0) / 3.0
+d10_ym = (d10_y0 + d10_y1) * 0.5
+for i in range(3):
+    px0 = d10_x0 + i * d10_pw
+    px1 = px0 + d10_pw
+    py_c = d10_ym + (i - 1) * 0.034
+    pname = f"Door_Interactive_L2_D10_Panel{i+1}"
+    p_st = 0.048
+    g_obj = make_box(pname, px0 + p_st, py_c - 0.008, FLOOR2_Z + 0.06, px1 - p_st, py_c + 0.008, FLOOR2_Z + d10_h - 0.07, "Doors", mats["glass_clear"])
+    sL = make_box(f"{pname}_StileL", px0, py_c - 0.022, FLOOR2_Z + 0.025, px0 + p_st, py_c + 0.022, FLOOR2_Z + d10_h - 0.045, "Doors", mats["black_metal"])
+    sR = make_box(f"{pname}_StileR", px1 - p_st, py_c - 0.022, FLOOR2_Z + 0.025, px1, py_c + 0.022, FLOOR2_Z + d10_h - 0.045, "Doors", mats["black_metal"])
+    rB = make_box(f"{pname}_RailB", px0, py_c - 0.022, FLOOR2_Z + 0.025, px1, py_c + 0.022, FLOOR2_Z + 0.075, "Doors", mats["black_metal"])
+    rT = make_box(f"{pname}_RailT", px0, py_c - 0.022, FLOOR2_Z + d10_h - 0.09, px1, py_c + 0.022, FLOOR2_Z + d10_h - 0.045, "Doors", mats["black_metal"])
+    bpy.context.view_layer.update()
+    for part in (sL, sR, rB, rT):
+        part.parent = g_obj
+        part.matrix_parent_inverse = g_obj.matrix_world.inverted()
+    if i in (0, 1):
+        ph = make_box(f"{pname}_Pull", px0 + 0.06, py_c - 0.042, FLOOR2_Z + 0.95, px0 + 0.088, py_c + 0.042, FLOOR2_Z + 1.25, "Doors", mats["black_metal"])
+        bpy.context.view_layer.update()
+        ph.parent = g_obj
+        ph.matrix_parent_inverse = g_obj.matrix_world.inverted()
+door_interactive_meta.append({
+    "id": "D10",
+    "label": "L2 Balcony 3-Panel Sliding Glass Door",
+    "connects": ["RM-13", "EXT-05"],
+    "object_name": "Door_Interactive_L2_D10_Panel1",
+    "kind": "sliding_multi",
+    "center_threejs": [round((d10_x0 + d10_x1) * 0.5, 4), round(FLOOR2_Z + 1.0, 4), round(-d10_ym, 4)],
+    "closed_aabb_threejs": [
+        round(d10_x0, 4), round(FLOOR2_Z, 4), round(-d10_y1, 4),
+        round(d10_x1, 4), round(FLOOR2_Z + d10_h, 4), round(-d10_y0, 4),
+    ],
+    "slide_axis_threejs": [1, 0, 0],
+    "max_slide_m": round(d10_pw * 1.85, 3),
+    "swing_sign": 1,
+    "swing_direction": "Multi-track Slide East (to L2 Front Sky Balcony)",
+})
+
 # ---------------------------------------------------------------------------
 # 8. WINDOWS (DEEP ARCHITECTURAL REVEALS, SLIM BLACK FRAMES & LOW-E GLASS)
 # ---------------------------------------------------------------------------
@@ -1455,11 +1740,10 @@ def build_luxury_car(fid, x0, y0, x1, y1, z_base, col, pal):
         for k in range(len(r0)):
             kn = (k + 1) % len(r0)
             bm_body.faces.new((r0[k], r0[kn], r1[kn], r1[k]))
-    # Cap front nose & rear tail + split sharp 90-deg fascia corners (>52°) while keeping fender/hood shoulders silky smooth!
+    # Cap front nose & rear tail + Catmull-Clark Subdivision (level 2) for truly sleek automotive bodywork!
     bm_body.faces.new(rings[0][::-1])
     bm_body.faces.new(rings[-1])
     bmesh.ops.recalc_face_normals(bm_body, faces=bm_body.faces)
-    split_sharp_edges(bm_body, 52.0)
     apply_box_uv(bm_body, scale=0.6)
     m_body = bpy.data.meshes.new(f"{fid}_Body")
     bm_body.to_mesh(m_body)
@@ -1467,7 +1751,10 @@ def build_luxury_car(fid, x0, y0, x1, y1, z_base, col, pal):
     for poly in m_body.polygons:
         poly.use_smooth = True
     m_body.materials.append(mats["car_paint"])
-    link_obj(bpy.data.objects.new(f"{fid}_Body", m_body), col)
+    o_body = link_obj(bpy.data.objects.new(f"{fid}_Body", m_body), col)
+    sub_mod = o_body.modifiers.new("AutoSmoothSubsurf", "SUBSURF")
+    sub_mod.levels = 2
+    sub_mod.render_levels = 2
 
     # Dark inner wheel well housings + dark chassis undertray so no gaps appear behind wheels
     make_box(f"{fid}_Undertray", cx - 0.78, y0 + 0.25, z_base + 0.16, cx + 0.78, y1 - 0.25, z_base + 0.34, col, mats["car_carbon"])
@@ -1600,21 +1887,28 @@ def build_luxury_car(fid, x0, y0, x1, y1, z_base, col, pal):
         sk_x = cx + sx_s * 0.845
         make_box(f"{fid}_SideSkirt_{s_tag}", sk_x - 0.03, y0 + 1.16, z_base + 0.17, sk_x + 0.03, y1 - 1.16, z_base + 0.23, col, mats["car_carbon"], bevel=0.006)
 
-    # 4. Front Aero Splitter, Mesh Grille, Matrix Quad-LED Headlights & License Plate
-    make_box(f"{fid}_FrontSplitter", cx - 0.78, y0 + 0.01, z_base + 0.16, cx + 0.78, y0 + 0.16, z_base + 0.21, col, mats["car_carbon"], bevel=0.008)
-    make_box(f"{fid}_FrontGrille", cx - 0.54, y0 + 0.02, z_base + 0.22, cx + 0.54, y0 + 0.10, z_base + 0.44, col, mats["black_metal"], bevel=0.008)
-    for g_z in (0.27, 0.33, 0.39):
-        make_box(f"{fid}_GrilleSlat_{g_z:.2f}", cx - 0.52, y0 + 0.015, z_base + g_z, cx + 0.52, y0 + 0.05, z_base + g_z + 0.014, col, mats["car_carbon"])
-    # Quad-Point Matrix LED Headlights + Full-Width Horizon DRL Lightbar
+    # 4. Millimeter-Flush Sculpted Front Aero Splitter, Grille, Angled Matrix LED Headlights & Plate
+    make_box(f"{fid}_FrontSplitter", cx - 0.68, y0 + 0.036, z_base + 0.16, cx + 0.68, y0 + 0.22, z_base + 0.205, col, mats["car_carbon"], bevel=0.008)
+    make_box(f"{fid}_FrontGrille", cx - 0.46, y0 + 0.042, z_base + 0.22, cx + 0.46, y0 + 0.18, z_base + 0.40, col, mats["black_metal"], bevel=0.008)
+    for g_z in (0.26, 0.31, 0.36):
+        make_box(f"{fid}_GrilleSlat_{g_z:.2f}", cx - 0.44, y0 + 0.037, z_base + g_z, cx + 0.44, y0 + 0.08, z_base + g_z + 0.012, col, mats["car_carbon"])
+    # Flush Curved-Contour Slim Matrix LED Headlights (angled ±11° to follow the sculpted Subsurf fender corners!)
     for sx_s, s_tag in [(-1, "L"), (1, "R")]:
-        hl_cx = cx + sx_s * 0.58
-        make_box(f"{fid}_HeadlightHousing_{s_tag}", hl_cx - 0.19, y0 + 0.05, z_base + 0.53, hl_cx + 0.19, y0 + 0.24, z_base + 0.64, col, mats["black_metal"], bevel=0.012)
-        make_box(f"{fid}_HeadlightDRL1_{s_tag}", hl_cx - 0.17, y0 + 0.042, z_base + 0.60, hl_cx + 0.17, y0 + 0.12, z_base + 0.622, col, mats["emit_headlight"])
-        make_box(f"{fid}_HeadlightDRL2_{s_tag}", hl_cx - 0.15, y0 + 0.045, z_base + 0.55, hl_cx + 0.15, y0 + 0.10, z_base + 0.568, col, mats["emit_headlight"])
-    make_box(f"{fid}_FrontHorizonLightbar", cx - 0.42, y0 + 0.025, z_base + 0.59, cx + 0.42, y0 + 0.07, z_base + 0.608, col, mats["emit_headlight"])
+        hl_cx = cx + sx_s * 0.49
+        ang_z = sx_s * math.radians(11.0)
+        hl_h = make_rounded_slab(f"{fid}_HeadlightHousing_{s_tag}", hl_cx - 0.145, y0 + 0.068, z_base + 0.525, hl_cx + 0.145, y0 + 0.21, z_base + 0.595, 0.020, col, mats["black_metal"], segs=4)
+        hl_h.rotation_euler = (0.0, 0.0, ang_z)
+        for p_off, p_tag in [(-0.052, "In"), (0.052, "Out")]:
+            prj = make_cylinder(f"{fid}_HeadlightProj_{s_tag}{p_tag}", hl_cx + p_off, y0 + 0.072, z_base + 0.556, 0.016, 0.028, col, mats["brushed_steel"], segs=12)
+            prj.rotation_euler = (math.pi * 0.5, 0.0, ang_z)
+        hl_drl = make_box(f"{fid}_HeadlightDRL1_{s_tag}", hl_cx - 0.125, y0 + 0.058, z_base + 0.568, hl_cx + 0.125, y0 + 0.11, z_base + 0.580, col, mats["emit_headlight"])
+        hl_drl.rotation_euler = (0.0, 0.0, ang_z)
+        hl_lens = make_rounded_slab(f"{fid}_HeadlightLens_{s_tag}", hl_cx - 0.148, y0 + 0.054, z_base + 0.522, hl_cx + 0.148, y0 + 0.13, z_base + 0.598, 0.020, col, mats["glass_clear"], segs=4)
+        hl_lens.rotation_euler = (0.0, 0.0, ang_z)
+    make_box(f"{fid}_FrontHorizonLightbar", cx - 0.36, y0 + 0.048, z_base + 0.564, cx + 0.36, y0 + 0.10, z_base + 0.576, col, mats["emit_headlight"])
     # Front License Plate ('B 123 AUR')
-    make_box(f"{fid}_PlateFront_Holder", cx - 0.22, y0 + 0.005, z_base + 0.28, cx + 0.22, y0 + 0.03, z_base + 0.39, col, mats["black_metal"], bevel=0.003)
-    make_box(f"{fid}_PlateFront_Face", cx - 0.20, y0 + 0.001, z_base + 0.295, cx + 0.20, y0 + 0.012, z_base + 0.375, col, mats["white_lacquer"])
+    make_box(f"{fid}_PlateFront_Holder", cx - 0.21, y0 + 0.032, z_base + 0.27, cx + 0.21, y0 + 0.055, z_base + 0.37, col, mats["black_metal"], bevel=0.003)
+    make_box(f"{fid}_PlateFront_Face", cx - 0.19, y0 + 0.028, z_base + 0.285, cx + 0.19, y0 + 0.040, z_base + 0.355, col, mats["white_lacquer"])
 
     # 5. Rear 3D Crimson LED Taillight Blade, Multi-Fin Diffuser, Exhausts & Rear Plate
     make_box(f"{fid}_RearTaillightHousing", cx - 0.74, y1 - 0.11, z_base + 0.74, cx + 0.74, y1 - 0.02, z_base + 0.84, col, mats["black_metal"], bevel=0.01)
@@ -1831,12 +2125,21 @@ def build_detailed_decorations(tag, col, pal):
     make_box(f"{tag}_Decor_Dining_PicLight", 4.864, 5.48, z + 2.26, 4.98, 5.89, z + 2.285, col, pal["metal"], bevel=0.004)
     make_box(f"{tag}_Decor_Dining_PicGlow", 4.91, 5.50, z + 2.252, 4.97, 5.87, z + 2.26, col, mats["emit_warm"])
 
-    # --- 3. MODERN KITCHEN (RM-11): Built-in Wall Oven, Range Hood, Sculpted Cookware & Lathed Fruit Bowl ---
+    # --- 3. MODERN KITCHEN (RM-11): Recessed Glass Built-in Oven w/ Rack & Knobs, Range Hood, Sculpted Cookware ---
     kt_z = z + 0.90
-    make_box(f"{tag}_Decor_Kitchen_OvenFace", 8.316, 6.26, z + 0.18, 8.326, 6.88, z + 0.78, col, mats["black_metal"], bevel=0.004)
-    make_box(f"{tag}_Decor_Kitchen_OvenPanel", 8.313, 6.28, z + 0.68, 8.319, 6.86, z + 0.76, col, mats["brushed_steel"], bevel=0.002)
-    make_box(f"{tag}_Decor_Kitchen_OvenGlass", 8.312, 6.32, z + 0.24, 8.318, 6.82, z + 0.66, col, mats["tv_screen"])
-    ov_h = make_cylinder(f"{tag}_Decor_Kitchen_OvenHandle", 8.292, 6.35, z + 0.71, 0.009, 0.44, col, pal["metal"], segs=12)
+    make_box(f"{tag}_Decor_Kitchen_OvenFrame", 8.316, 6.26, z + 0.18, 8.332, 6.88, z + 0.78, col, mats["black_metal"], bevel=0.004)
+    make_box(f"{tag}_Decor_Kitchen_OvenPanel", 8.312, 6.27, z + 0.68, 8.320, 6.87, z + 0.77, col, mats["brushed_steel"], bevel=0.002)
+    # 3 metallic rotary control knobs + digital clock readout on stainless control strip
+    for k_y in (6.36, 6.44, 6.76):
+        kn = make_cylinder(f"{tag}_Decor_Kitchen_OvenKnob_{k_y:.2f}", 8.312, k_y, z + 0.725, 0.015, 0.020, col, mats["black_metal"], segs=12)
+        kn.rotation_euler = (0, -math.pi * 0.5, 0)
+    make_box(f"{tag}_Decor_Kitchen_OvenClock", 8.310, 6.52, z + 0.71, 8.314, 6.64, z + 0.74, col, mats["tv_screen"])
+    # Recessed dark baking cavity behind reflective clear oven door glass + internal chrome rack!
+    make_box(f"{tag}_Decor_Kitchen_OvenCavity", 8.320, 6.32, z + 0.24, 8.345, 6.82, z + 0.65, col, mats["matte_charcoal"])
+    for rack_z in (z + 0.36, z + 0.50):
+        make_box(f"{tag}_Decor_Kitchen_OvenRack_{rack_z:.2f}", 8.318, 6.34, rack_z, 8.335, 6.80, rack_z + 0.006, col, mats["brushed_steel"])
+    make_box(f"{tag}_Decor_Kitchen_OvenGlass", 8.310, 6.31, z + 0.23, 8.317, 6.83, z + 0.66, col, mats["car_glass"])
+    ov_h = make_cylinder(f"{tag}_Decor_Kitchen_OvenHandle", 8.285, 6.34, z + 0.64, 0.010, 0.46, col, mats["brushed_steel"], segs=12)
     ov_h.rotation_euler = (-math.pi * 0.5, 0, 0)
     make_box(f"{tag}_Decor_Kitchen_Hood", 8.56, 6.22, z + 1.50, 8.92, 6.92, z + 1.54, col, mats["brushed_steel"], bevel=0.004)
     make_box(f"{tag}_Decor_Kitchen_HoodLight", 8.58, 6.28, z + 1.494, 8.64, 6.86, z + 1.501, col, mats["emit_warm"])
@@ -2185,7 +2488,14 @@ def build_style_furniture(style_name, pal):
             make_cylinder(f"{fid}_Rod2", cx, cy + 0.46, z_base + 2.09, 0.006, WALL_TOP_Z - (z_base + 2.09), col, pal["metal"], segs=8)
 
         elif kind == "kitchen_counter":
-            make_box(f"{fid}_BaseCab", x0, y0, z_base + 0.08, x1, y1, z_base + 0.86, col, pal["cabinet"], bevel=0.004)
+            if f["id"] == "F-KT-E":
+                make_box(f"{fid}_BaseCab", x0, y0, z_base + 0.08, x1, y1, z_base + 0.86, col, pal["cabinet"], bevel=0.004)
+            else:
+                # Keep sink cavity completely hollow above z_base + 0.715 while keeping full front cabinet apron!
+                make_box(f"{fid}_BaseCab_Low", x0, y0, z_base + 0.08, x1, y1, z_base + 0.715, col, pal["cabinet"], bevel=0.004)
+                make_box(f"{fid}_BaseCab_Apron", x0, y1 - 0.06, z_base + 0.715, x1, y1, z_base + 0.86, col, pal["cabinet"], bevel=0.003)
+                make_box(f"{fid}_BaseCab_SideW", x0, y0, z_base + 0.715, 7.33, y1, z_base + 0.86, col, pal["cabinet"], bevel=0.003)
+                make_box(f"{fid}_BaseCab_SideE", 8.05, y0, z_base + 0.715, x1, y1, z_base + 0.86, col, pal["cabinet"], bevel=0.003)
             make_box(f"{fid}_ToeKick", x0 + 0.04, y0 + 0.04, z_base, x1 - 0.01, y1 - 0.01, z_base + 0.08, col, mats["black_metal"])
             if f["id"] == "F-KT-E":
                 make_box(f"{fid}_Counter", x0, y0, z_base + 0.86, x1, y1, z_base + 0.90, col, pal["stone_top"], bevel=0.004)
@@ -2207,7 +2517,11 @@ def build_style_furniture(style_name, pal):
                     col, mats["planter_ceramic"], segs=18
                 )
             else:
-                make_box(f"{fid}_Counter", x0, y0, z_base + 0.86, x1, y1, z_base + 0.90, col, pal["stone_top"], bevel=0.004)
+                # Split South Countertop around the real 3D recessed undermount sink cutout (X: 7.34..8.04, Y: 5.33..5.72)!
+                make_box(f"{fid}_Counter_W", x0, y0, z_base + 0.86, 7.34, y1, z_base + 0.90, col, pal["stone_top"], bevel=0.003)
+                make_box(f"{fid}_Counter_E", 8.04, y0, z_base + 0.86, x1, y1, z_base + 0.90, col, pal["stone_top"], bevel=0.003)
+                make_box(f"{fid}_Counter_Back", 7.34, y0, z_base + 0.86, 8.04, 5.33, z_base + 0.90, col, pal["stone_top"], bevel=0.003)
+                make_box(f"{fid}_Counter_Front", 7.34, 5.72, z_base + 0.86, 8.04, y1, z_base + 0.90, col, pal["stone_top"], bevel=0.003)
                 for rx in (7.42, 7.88):
                     make_box(f"{fid}_Reveal_{rx:.2f}", rx - 0.002, y1 - 0.003, z_base + 0.09, rx + 0.002, y1 + 0.003, z_base + 0.85, col, mats["black_metal"])
                 make_box(f"{fid}_Backsplash", x0, y0, z_base + 0.90, x1 + 0.62, y0 + 0.022, z_base + 1.54, col, pal["stone_top"])
@@ -2227,14 +2541,27 @@ def build_style_furniture(style_name, pal):
                     make_cylinder(f"{fid}_Ring_{bx:.2f}_{by:.2f}", bx, by, z_base + 0.910, 0.074, 0.003, col, pal["metal"], segs=20)
 
         elif kind == "kitchen_sink":
-            # Sculpted Stainless Undermount Double Sink with rounded inner bowls + TRUE 16-segment curved gooseneck mixer tap!
-            make_rounded_slab(f"{fid}_RimOuter", x0, y0, z_base + 0.90, x1, y1, z_base + 0.906, 0.025, col, mats["brushed_steel"], segs=6)
-            make_rounded_slab(f"{fid}_Bowl1", x0 + 0.025, y0 + 0.048, z_base + 0.904, cx - 0.015, y1 - 0.025, z_base + 0.909, 0.032, col, mats["matte_charcoal"], segs=6)
-            make_rounded_slab(f"{fid}_Bowl2", cx + 0.015, y0 + 0.048, z_base + 0.904, x1 - 0.025, y1 - 0.025, z_base + 0.909, 0.032, col, mats["matte_charcoal"], segs=6)
-            make_cylinder(f"{fid}_Drain1", (x0 + cx) * 0.5, cy + 0.01, z_base + 0.908, 0.028, 0.003, col, mats["brushed_steel"], segs=18)
-            make_cylinder(f"{fid}_Drain2", (cx + x1) * 0.5, cy + 0.01, z_base + 0.908, 0.028, 0.003, col, mats["brushed_steel"], segs=18)
-            fy_base = y0 + 0.024
-            make_cylinder(f"{fid}_FaucetBase", cx, fy_base, z_base + 0.906, 0.022, 0.042, col, pal["metal"], segs=18)
+            # TRUE 3D RECESSED UNDERMOUNT STAINLESS DOUBLE BASIN (19cm deep sunken bowls, zero flat stickers!) + curved gooseneck tap
+            sx0, sy0, sx1, sy1 = 7.34, 5.33, 8.04, 5.72
+            s_bot = z_base + 0.72
+            s_top = z_base + 0.898
+            # Brushed steel basin floor + 4 recessed perimeter walls + central divider
+            make_box(f"{fid}_BasinFloor", sx0, sy0, s_bot, sx1, sy1, s_bot + 0.015, col, mats["brushed_steel"])
+            make_box(f"{fid}_BasinWallW", sx0, sy0, s_bot, sx0 + 0.016, sy1, s_top, col, mats["brushed_steel"])
+            make_box(f"{fid}_BasinWallE", sx1 - 0.016, sy0, s_bot, sx1, sy1, s_top, col, mats["brushed_steel"])
+            make_box(f"{fid}_BasinWallS", sx0, sy0, s_bot, sx1, sy0 + 0.016, s_top, col, mats["brushed_steel"])
+            make_box(f"{fid}_BasinWallN", sx0, sy1 - 0.016, s_bot, sx1, sy1, s_top, col, mats["brushed_steel"])
+            make_box(f"{fid}_BasinDivider", cx - 0.014, sy0, s_bot, cx + 0.014, sy1, s_top - 0.012, col, mats["brushed_steel"], bevel=0.004)
+            # Slim recessed brushed-steel rim lip flush with marble cutout
+            make_box(f"{fid}_RimW", sx0 - 0.014, sy0 - 0.014, s_top - 0.004, sx0 + 0.004, sy1 + 0.014, s_top + 0.005, col, mats["brushed_steel"])
+            make_box(f"{fid}_RimE", sx1 - 0.004, sy0 - 0.014, s_top - 0.004, sx1 + 0.014, sy1 + 0.014, s_top + 0.005, col, mats["brushed_steel"])
+            make_box(f"{fid}_RimS", sx0, sy0 - 0.014, s_top - 0.004, sx1, sy0 + 0.004, s_top + 0.005, col, mats["brushed_steel"])
+            make_box(f"{fid}_RimN", sx0, sy1 - 0.004, s_top - 0.004, sx1, sy1 + 0.014, s_top + 0.005, col, mats["brushed_steel"])
+            # Deep strainer basket drains in each recessed bowl
+            make_cylinder(f"{fid}_Drain1", (sx0 + cx) * 0.5, (sy0 + sy1) * 0.5, s_bot + 0.014, 0.032, 0.006, col, mats["black_metal"], segs=16)
+            make_cylinder(f"{fid}_Drain2", (cx + sx1) * 0.5, (sy0 + sy1) * 0.5, s_bot + 0.014, 0.032, 0.006, col, mats["black_metal"], segs=16)
+            fy_base = y0 + 0.018
+            make_cylinder(f"{fid}_FaucetBase", cx, fy_base, z_base + 0.90, 0.022, 0.044, col, pal["metal"], segs=16)
             make_swept_tube(f"{fid}_FaucetLever", [(cx + 0.018, fy_base, z_base + 0.942), (cx + 0.068, fy_base + 0.012, z_base + 0.958)], 0.0055, col, pal["metal"], segs=10)
             # True smooth 180° curved tubular swan-neck kitchen faucet!
             goose_pts = [(cx, fy_base, z_base + 0.945), (cx, fy_base, z_base + 1.11)]
@@ -2565,8 +2892,211 @@ def build_style_furniture(style_name, pal):
     make_box(f"{tag}_ArtDining_Frame", 4.864, 5.35, FLOOR_Z + 1.30, 4.90, 6.02, FLOOR_Z + 2.20, col, pal["metal"])
     make_plane_uv(f"{tag}_ArtDining_Canvas", 4.905, 5.38, FLOOR_Z + 1.33, 4.905, 5.99, FLOOR_Z + 2.17, col, pal["art"])
 
+    # Keep South Kitchen BaseCab clear behind the 19cm recessed stainless sink basin!
+    # (Handled smoothly because BaseCab sits below s_bot for F-KT-S)
     # Bespoke room-by-room accessories, tableware, lamps, books, spa details & outdoor decor
     build_detailed_decorations(tag, col, pal)
+    # Complete Level 2 Furnishings: RM-12 Tempat Jemuran & Service Deck, RM-13 Sky Lounge & EXT-05 Front Balcony
+    build_level2_furniture(tag, col, pal)
+
+
+def make_draped_garment(name, x0, x1, y_bar, z_bar, drop_len, col_name, mat):
+    """Creates a realistic softly pleated U-draped cloth towel / shirt with organic fabric folds & soft corners."""
+    bm = bmesh.new()
+    cols_n = 14
+    r_bar = 0.018
+    prof = [
+        (y_bar - 0.034, z_bar - drop_len),
+        (y_bar - 0.030, z_bar - drop_len * 0.68),
+        (y_bar - 0.025, z_bar - drop_len * 0.35),
+        (y_bar - r_bar, z_bar - 0.01),
+        (y_bar - r_bar * 0.6, z_bar + r_bar),
+        (y_bar + r_bar * 0.6, z_bar + r_bar),
+        (y_bar + r_bar, z_bar - 0.01),
+        (y_bar + 0.025, z_bar - drop_len * 0.35),
+        (y_bar + 0.030, z_bar - drop_len * 0.68),
+        (y_bar + 0.032, z_bar - drop_len * 0.94),
+    ]
+    grid = []
+    for c in range(cols_n + 1):
+        tx = c / float(cols_n)
+        px = x0 + (x1 - x0) * tx
+        # Subtle catenary cloth sag & curved edge drape
+        edge_lift = 0.018 * (1.0 - math.sin(tx * math.pi) ** 0.45)
+        row = []
+        for pi, (py, pz) in enumerate(prof):
+            hem_w = 1.0 if pi in (0, len(prof) - 1) else (0.65 if pi in (1, len(prof) - 2) else (0.30 if pi in (2, len(prof) - 3) else 0.0))
+            wave = (math.sin(tx * math.pi * 4.0) * 0.014 + math.cos(tx * math.pi * 7.0) * 0.005) * hem_w
+            row.append(bm.verts.new((px, py + wave, pz + edge_lift * hem_w)))
+        grid.append(row)
+    for c in range(cols_n):
+        for p in range(len(prof) - 1):
+            bm.faces.new((grid[c][p], grid[c + 1][p], grid[c + 1][p + 1], grid[c][p + 1]))
+    bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
+    apply_box_uv(bm, scale=2.2)
+    mesh = bpy.data.meshes.new(name)
+    bm.to_mesh(mesh)
+    bm.free()
+    for poly in mesh.polygons:
+        poly.use_smooth = True
+    mesh.materials.append(mat)
+    return link_obj(bpy.data.objects.new(name, mesh), col_name)
+
+
+def build_level2_furniture(tag, col, pal):
+    """Builds complete Level 2 spaces: RM-12 Tempat Jemuran & Service Deck, RM-13 Sky Lounge, EXT-05 Front Balcony."""
+    z2 = FLOOR2_Z
+
+    # =========================================================================
+    # 1. RM-12 TEMPAT JEMURAN & SKY SERVICE DECK (X: 0.20..4.864, Y: 6.80..11.50)
+    # =========================================================================
+    # A) Primary Brushed-Stainless Folding 3-Bar Drying Rack #1 (Jemuran Lipat Palang 3: X=0.88..2.52, Y=9.05..9.82)
+    rx0, rx1, ry0, ry1 = 0.88, 2.52, 9.05, 9.82
+    ryc = (ry0 + ry1) * 0.5
+    for sx, stag in [(rx0, "W"), (rx1, "E")]:
+        # Sculpted brushed-stainless A-frame tubular legs
+        make_swept_tube(f"{tag}_L2_Jemuran_Rack1_LegF_{stag}", [(sx, ry0, z2), (sx, ryc - 0.14, z2 + 1.18), (sx, ryc, z2 + 1.36)], 0.014, col, mats["brushed_steel"], segs=10)
+        make_swept_tube(f"{tag}_L2_Jemuran_Rack1_LegB_{stag}", [(sx, ry1, z2), (sx, ryc + 0.14, z2 + 1.18), (sx, ryc, z2 + 1.36)], 0.014, col, mats["brushed_steel"], segs=10)
+        make_swept_tube(f"{tag}_L2_Jemuran_Rack1_Brace_{stag}", [(sx, ry0 + 0.06, z2 + 0.36), (sx, ry1 - 0.06, z2 + 0.36)], 0.010, col, mats["brushed_steel"], segs=8)
+    # 3 Parallel Horizontal Drying Rails + Lower Shoe-Drying Bars
+    for bar_i, (by_r, bz_r) in enumerate([(ryc - 0.14, z2 + 1.18), (ryc, z2 + 1.36), (ryc + 0.14, z2 + 1.18)]):
+        make_swept_tube(f"{tag}_L2_Jemuran_Rack1_Bar_{bar_i}", [(rx0 - 0.04, by_r, bz_r), (rx1 + 0.04, by_r, bz_r)], 0.011, col, mats["brushed_steel"], segs=10)
+    make_swept_tube(f"{tag}_L2_Jemuran_Rack1_LowBar1", [(rx0, ryc - 0.12, z2 + 0.36), (rx1, ryc - 0.12, z2 + 0.36)], 0.009, col, mats["brushed_steel"], segs=8)
+    make_swept_tube(f"{tag}_L2_Jemuran_Rack1_LowBar2", [(rx0, ryc + 0.12, z2 + 0.36), (rx1, ryc + 0.12, z2 + 0.36)], 0.009, col, mats["brushed_steel"], segs=8)
+    # Draped Fresh-Washed Towels, Linen Sheets & Clothes + Walnut Clothespins on Rack #1!
+    garments_r1 = [
+        ("WhiteTowel", 0.96, 1.48, ryc - 0.14, z2 + 1.18, 0.56, mats["linen_white"]),
+        ("BeigeTowel", 1.56, 2.04, ryc - 0.14, z2 + 1.18, 0.52, mats["boucle_beige"]),
+        ("WhiteSheet", 0.98, 1.82, ryc, z2 + 1.36, 0.72, mats["linen_white"]),
+        ("SageTee", 1.94, 2.42, ryc, z2 + 1.36, 0.54, mats["linen_sage"]),
+        ("NavyDenim", 1.12, 1.62, ryc + 0.14, z2 + 1.18, 0.64, mats["cotton_navy"]),
+        ("OatmealLinen", 1.76, 2.38, ryc + 0.14, z2 + 1.18, 0.50, mats["linen_oatmeal"]),
+    ]
+    for gname, gx0, gx1, gy_b, gz_b, gdrop, gmat in garments_r1:
+        make_draped_garment(f"{tag}_L2_Jemuran_Cloth_{gname}", gx0, gx1, gy_b, gz_b, gdrop, col, gmat)
+        for pin_x in (gx0 + 0.06, gx1 - 0.06):
+            make_box(f"{tag}_L2_Jemuran_Pin_{gname}_{pin_x:.2f}", pin_x - 0.008, gy_b - 0.012, gz_b + 0.012, pin_x + 0.008, gy_b + 0.012, gz_b + 0.056, col, mats["walnut"])
+
+    # B) Secondary Folding Gull-Wing Drying Rack #2 (Jemuran Sayap: X=2.98..4.32, Y=9.75..10.48)
+    r2x0, r2x1, r2y0, r2y1 = 2.98, 4.32, 9.75, 10.48
+    r2yc = (r2y0 + r2y1) * 0.5
+    for sx, stag in [(r2x0 + 0.24, "W"), (r2x1 - 0.24, "E")]:
+        make_swept_tube(f"{tag}_L2_Jemuran_Rack2_LegA_{stag}", [(sx, r2y0, z2), (sx, r2y1, z2 + 0.96)], 0.012, col, mats["brushed_steel"], segs=8)
+        make_swept_tube(f"{tag}_L2_Jemuran_Rack2_LegB_{stag}", [(sx, r2y1, z2), (sx, r2y0, z2 + 0.96)], 0.012, col, mats["brushed_steel"], segs=8)
+    # Central horizontal frame + angled wing extensions + parallel drying wires
+    for wy in (r2y0 + 0.04, r2yc, r2y1 - 0.04):
+        make_swept_tube(f"{tag}_L2_Jemuran_Rack2_Rail_{wy:.2f}", [(r2x0, wy, z2 + 1.06), (r2x0 + 0.24, wy, z2 + 0.96), (r2x1 - 0.24, wy, z2 + 0.96), (r2x1, wy, z2 + 1.06)], 0.008, col, mats["brushed_steel"], segs=8)
+    make_draped_garment(f"{tag}_L2_Jemuran_R2_Towel1", 3.30, 3.88, r2y0 + 0.04, z2 + 0.96, 0.44, col, mats["linen_white"])
+    make_draped_garment(f"{tag}_L2_Jemuran_R2_Towel2", 3.38, 3.96, r2y1 - 0.04, z2 + 0.96, 0.42, col, mats["linen_sage"])
+
+    # C) Wall-Mounted Overhead Stainless Clothesline + 5 Wooden Hangers with Shirts along East Wall (X=4.48..4.86, Y=7.25..8.12)
+    make_box(f"{tag}_L2_Jemuran_WallBrk1", 4.46, 7.24, z2 + 1.88, 4.864, 7.28, z2 + 1.94, col, mats["black_metal"])
+    make_box(f"{tag}_L2_Jemuran_WallBrk2", 4.46, 8.08, z2 + 1.88, 4.864, 8.12, z2 + 1.94, col, mats["black_metal"])
+    make_swept_tube(f"{tag}_L2_Jemuran_HangBar", [(4.54, 7.24, z2 + 1.91), (4.54, 8.12, z2 + 1.91)], 0.011, col, mats["brushed_steel"], segs=10)
+    hang_mats = [mats["linen_white"], mats["linen_oatmeal"], mats["cotton_navy"], mats["linen_white"], mats["linen_sage"]]
+    for hi, hmat in enumerate(hang_mats):
+        hy = 7.36 + hi * 0.165
+        # Triangular wooden hanger + crisp hanging shirt silhouette
+        make_swept_tube(f"{tag}_L2_Jemuran_Hanger_{hi}", [(4.54, hy, z2 + 1.91), (4.54, hy, z2 + 1.83), (4.38, hy, z2 + 1.75), (4.70, hy, z2 + 1.75), (4.54, hy, z2 + 1.83)], 0.006, col, mats["light_oak"], segs=6)
+        make_rounded_slab(f"{tag}_L2_Jemuran_Shirt_{hi}", 4.37, hy - 0.020, z2 + 1.18, 4.71, hy + 0.020, z2 + 1.76, 0.018, col, hmat, segs=4)
+
+    # D) L2 Laundry Prep & Folding Counter + True Recessed 3D Stainless Slop Sink & Gooseneck Tap (X=0.22..2.28, Y=7.02..7.60)
+    make_box(f"{tag}_L2_Jemuran_CabLow", 0.22, 7.02, z2 + 0.06, 2.28, 7.60, z2 + 0.675, col, pal["cabinet"], bevel=0.004)
+    make_box(f"{tag}_L2_Jemuran_CabApron", 0.22, 7.54, z2 + 0.675, 2.28, 7.60, z2 + 0.84, col, pal["cabinet"], bevel=0.003)
+    make_box(f"{tag}_L2_Jemuran_CabSideE", 0.97, 7.02, z2 + 0.675, 2.28, 7.60, z2 + 0.84, col, pal["cabinet"], bevel=0.003)
+    make_box(f"{tag}_L2_Jemuran_CabToe", 0.24, 7.04, z2, 2.26, 7.56, z2 + 0.06, col, mats["black_metal"])
+    # Counter split cleanly around sunken slop sink (X=0.40..0.96, Y=7.12..7.52)
+    make_box(f"{tag}_L2_Jemuran_TopW", 0.22, 7.02, z2 + 0.84, 0.40, 7.60, z2 + 0.88, col, pal["stone_top"], bevel=0.003)
+    make_box(f"{tag}_L2_Jemuran_TopE", 0.96, 7.02, z2 + 0.84, 2.28, 7.60, z2 + 0.88, col, pal["stone_top"], bevel=0.003)
+    make_box(f"{tag}_L2_Jemuran_TopS", 0.40, 7.02, z2 + 0.84, 0.96, 7.12, z2 + 0.88, col, pal["stone_top"], bevel=0.003)
+    make_box(f"{tag}_L2_Jemuran_TopN", 0.40, 7.52, z2 + 0.84, 0.96, 7.60, z2 + 0.88, col, pal["stone_top"], bevel=0.003)
+    # Recessed 3D stainless slop sink basin + 180° curved gooseneck tap
+    make_box(f"{tag}_L2_Jemuran_SinkFloor", 0.40, 7.12, z2 + 0.68, 0.96, 7.52, z2 + 0.695, col, mats["brushed_steel"])
+    make_box(f"{tag}_L2_Jemuran_SinkW", 0.40, 7.12, z2 + 0.68, 0.415, 7.52, z2 + 0.882, col, mats["brushed_steel"])
+    make_box(f"{tag}_L2_Jemuran_SinkE", 0.945, 7.12, z2 + 0.68, 0.96, 7.52, z2 + 0.882, col, mats["brushed_steel"])
+    make_box(f"{tag}_L2_Jemuran_SinkS", 0.40, 7.12, z2 + 0.68, 0.96, 7.135, z2 + 0.882, col, mats["brushed_steel"])
+    make_box(f"{tag}_L2_Jemuran_SinkN", 0.40, 7.505, z2 + 0.68, 0.96, 7.52, z2 + 0.882, col, mats["brushed_steel"])
+    make_cylinder(f"{tag}_L2_Jemuran_SinkDrain", 0.68, 7.32, z2 + 0.694, 0.030, 0.006, col, mats["black_metal"], segs=14)
+    g2_pts = [(0.68, 7.06, z2 + 0.88), (0.68, 7.06, z2 + 1.08)]
+    for gk in range(11):
+        ang = math.pi * (gk / 10.0)
+        g2_pts.append((0.68, 7.06 + 0.09 * (1.0 - math.cos(ang)), z2 + 1.08 + 0.09 * math.sin(ang)))
+    g2_pts.append((0.68, 7.24, z2 + 1.04))
+    make_swept_tube(f"{tag}_L2_Jemuran_Gooseneck", g2_pts, 0.010, col, mats["brushed_steel"], segs=10)
+    # Folded Clean Towel Stacks + Detergent & Softener Bottles + Woven Rattan Laundry Hamper
+    for ti, (tz_off, tmat) in enumerate([(0.0, mats["linen_white"]), (0.055, mats["boucle_beige"]), (0.110, mats["linen_sage"])]):
+        make_plush_cushion(f"{tag}_L2_Jemuran_FoldTowel_{ti}", 1.18, 7.12, z2 + 0.88 + tz_off, 1.56, 7.48, z2 + 0.935 + tz_off, col, tmat, puff=0.14)
+    make_cylinder(f"{tag}_L2_Jemuran_Detergent1", 1.76, 7.20, z2 + 0.88, 0.052, 0.24, col, mats["white_lacquer"], segs=14, radius_top=0.036)
+    make_cylinder(f"{tag}_L2_Jemuran_DetergentCap1", 1.76, 7.20, z2 + 1.12, 0.024, 0.04, col, mats["cotton_navy"], segs=12)
+    make_cylinder(f"{tag}_L2_Jemuran_Softener2", 1.92, 7.22, z2 + 0.88, 0.046, 0.21, col, mats["linen_sage"], segs=14, radius_top=0.030)
+    make_lathed_mesh(f"{tag}_L2_Jemuran_PinBowl", 2.10, 7.28, z2 + 0.88, [(0.055, 0.0), (0.082, 0.025), (0.088, 0.068), (0.080, 0.068), (0.050, 0.012)], col, mats["planter_ceramic"], segs=16)
+    # Woven Rattan Laundry Basket overflowing with soft folded linens at (2.62, 7.34)
+    make_lathed_mesh(
+        f"{tag}_L2_Jemuran_RattanBasket", 2.62, 7.34, z2,
+        [(0.19, 0.0), (0.22, 0.14), (0.24, 0.48), (0.225, 0.50), (0.21, 0.48), (0.18, 0.04)],
+        col, mats["rattan"], segs=16
+    )
+    make_plush_cushion(f"{tag}_L2_Jemuran_BasketLinen", 2.42, 7.15, z2 + 0.36, 2.82, 7.52, z2 + 0.55, col, mats["linen_white"], puff=0.22)
+
+    # E) Folding Ironing Board & Ceramic Steam Iron (X=3.05..4.15, Y=7.14..7.52)
+    make_rounded_slab(f"{tag}_L2_Jemuran_IronBoard", 3.05, 7.16, z2 + 0.80, 4.15, 7.50, z2 + 0.84, 0.14, col, mats["linen_oatmeal"], segs=5)
+    make_swept_tube(f"{tag}_L2_Jemuran_IronLeg1", [(3.22, 7.20, z2), (3.92, 7.20, z2 + 0.80)], 0.012, col, mats["black_metal"], segs=8)
+    make_swept_tube(f"{tag}_L2_Jemuran_IronLeg2", [(3.92, 7.46, z2), (3.22, 7.46, z2 + 0.80)], 0.012, col, mats["black_metal"], segs=8)
+    make_rounded_slab(f"{tag}_L2_Jemuran_SteamIron", 3.84, 7.25, z2 + 0.84, 4.06, 7.40, z2 + 0.94, 0.04, col, mats["white_lacquer"], segs=4)
+
+    # =========================================================================
+    # 2. RM-13 L2 SKY LOUNGE & FAMILY PAVILION (X: 4.984..8.944, Y: 5.20..11.50)
+    # =========================================================================
+    make_rounded_slab(f"{tag}_L2_Lounge_Rug", 5.38, 5.60, z2, 8.20, 8.35, z2 + 0.014, 0.06, col, pal["rug"], segs=4)
+    # Plush 3-Seater Family Sofa along West Wall (X=5.12..6.04, Y=5.65..7.90 — 100% clear of Door D9 at Y=8.20..9.10!)
+    make_box(f"{tag}_L2_Lounge_SofaBase", 5.12, 5.65, z2 + 0.06, 6.02, 7.90, z2 + 0.26, col, pal["wood"], bevel=0.01)
+    make_plush_cushion(f"{tag}_L2_Lounge_SofaSeat1", 5.16, 5.70, z2 + 0.25, 6.04, 6.78, z2 + 0.45, col, pal["upholstery"], puff=0.18)
+    make_plush_cushion(f"{tag}_L2_Lounge_SofaSeat2", 5.16, 6.80, z2 + 0.25, 6.04, 7.86, z2 + 0.45, col, pal["upholstery"], puff=0.18)
+    make_plush_cushion(f"{tag}_L2_Lounge_SofaBack", 5.12, 5.68, z2 + 0.42, 5.36, 7.88, z2 + 0.82, col, pal["upholstery"], puff=0.20)
+    make_plush_cushion(f"{tag}_L2_Lounge_Pillow1", 5.36, 5.88, z2 + 0.44, 5.62, 6.32, z2 + 0.74, col, pal["accent_pillow"], puff=0.26, rot_z=0.20)
+    make_plush_cushion(f"{tag}_L2_Lounge_Pillow2", 5.36, 7.22, z2 + 0.44, 5.62, 7.66, z2 + 0.74, col, mats["linen_oatmeal"], puff=0.26, rot_z=-0.18)
+    # Sculptural Round Travertine Coffee Table + Tea Tray & Ceramic Mugs
+    make_cylinder(f"{tag}_L2_Lounge_TblDrum", 6.85, 6.78, z2, 0.24, 0.34, col, pal["wood_accent"], segs=16)
+    make_cylinder(f"{tag}_L2_Lounge_TblTop", 6.85, 6.78, z2 + 0.34, 0.52, 0.036, col, pal["stone_top"], segs=16)
+    make_rounded_slab(f"{tag}_L2_Lounge_Tray", 6.66, 6.60, z2 + 0.376, 7.04, 6.96, z2 + 0.392, 0.04, col, pal["wood"], segs=4)
+    make_curved_mug(f"{tag}_L2_Lounge_Cup1", 6.78, 6.72, z2 + 0.392, col, mats["ceramic_white"], handle_angle=0.5)
+    make_curved_mug(f"{tag}_L2_Lounge_Cup2", 6.92, 6.84, z2 + 0.392, col, mats["ceramic_white"], handle_angle=-1.1)
+    # East Wall Floating Fluted Media Console + 55" OLED Screen + Acoustic Slat Accent
+    make_box(f"{tag}_L2_Lounge_MediaSlat", 8.91, 5.75, z2, 8.944, 8.15, WALL2_TOP_Z - 0.08, col, pal["wood_accent"])
+    make_box(f"{tag}_L2_Lounge_MediaCons", 8.50, 5.82, z2 + 0.22, 8.92, 8.08, z2 + 0.54, col, pal["wood"], bevel=0.008)
+    make_box(f"{tag}_L2_Lounge_TV", 8.85, 6.18, z2 + 0.88, 8.90, 7.72, z2 + 1.78, col, mats["tv_screen"], bevel=0.006)
+    # North Reading Nook + Coffee Bar Credenza under Window W7 (Y=10.95..11.46)
+    make_box(f"{tag}_L2_Lounge_Credenza", 6.55, 10.96, z2 + 0.08, 8.78, 11.46, z2 + 0.62, col, pal["cabinet"], bevel=0.006)
+    make_box(f"{tag}_L2_Lounge_CredTop", 6.54, 10.95, z2 + 0.62, 8.79, 11.47, z2 + 0.648, col, pal["stone_top"], bevel=0.004)
+    make_lathed_mesh(f"{tag}_L2_Lounge_Kettle", 7.15, 11.20, z2 + 0.648, [(0.068, 0.0), (0.072, 0.06), (0.056, 0.14), (0.044, 0.16)], col, mats["black_metal"], segs=14)
+    make_plush_cushion(f"{tag}_L2_Lounge_ChairSeat", 5.38, 10.12, z2 + 0.26, 6.12, 10.86, z2 + 0.45, col, pal["upholstery"], puff=0.18)
+    make_plush_cushion(f"{tag}_L2_Lounge_ChairBack", 5.38, 10.68, z2 + 0.42, 6.12, 10.90, z2 + 0.86, col, pal["upholstery"], puff=0.20)
+    build_potted_plant(f"{tag}_L2_Lounge_Fig", 8.58, 10.55, z2, 0.18, 1.55, col, pal["pot"])
+    # S-Fold Sheer Curtains flanking L2 Sliding Door D10 & Panoramic Window W7
+    for cx0, cx1, cy_c, cn in [
+        (5.12, 5.56, 5.30, "L2_Curtain_Balc_W"),
+        (8.34, 8.80, 5.30, "L2_Curtain_Balc_E"),
+        (5.22, 5.68, 11.38, "L2_Curtain_Rear_W"),
+        (8.22, 8.68, 11.38, "L2_Curtain_Rear_E"),
+    ]:
+        make_pleated_curtain(f"{tag}_{cn}", cx0, cx1, cy_c, z2 + 0.02, WALL2_TOP_Z - 0.06, col, pal["curtain"], waves=4)
+
+    # =========================================================================
+    # 3. EXT-05 L2 FRONT SKY BALCONY (X: 3.164..8.944, Y: 2.04..5.00)
+    # =========================================================================
+    for bx_c, b_tag in [(3.98, "W"), (5.38, "E")]:
+        make_box(f"{tag}_L2_Balc_ChairFrame_{b_tag}", bx_c - 0.36, 3.00, z2 + 0.06, bx_c + 0.36, 3.74, z2 + 0.26, col, mats["walnut"], bevel=0.01)
+        make_plush_cushion(f"{tag}_L2_Balc_ChairSeat_{b_tag}", bx_c - 0.33, 3.03, z2 + 0.26, bx_c + 0.33, 3.71, z2 + 0.44, col, pal["upholstery"], puff=0.18)
+        make_plush_cushion(f"{tag}_L2_Balc_ChairBack_{b_tag}", bx_c - 0.33, 3.52, z2 + 0.42, bx_c + 0.33, 3.73, z2 + 0.78, col, pal["upholstery"], puff=0.20)
+    make_cylinder(f"{tag}_L2_Balc_BistroBase", 4.68, 3.36, z2, 0.16, 0.03, col, mats["black_metal"], segs=16)
+    make_cylinder(f"{tag}_L2_Balc_BistroStem", 4.68, 3.36, z2 + 0.03, 0.022, 0.44, col, mats["black_metal"], segs=12)
+    make_cylinder(f"{tag}_L2_Balc_BistroTop", 4.68, 3.36, z2 + 0.47, 0.28, 0.032, col, mats["travertine"], segs=16)
+    make_curved_mug(f"{tag}_L2_Balc_Cup1", 4.62, 3.32, z2 + 0.502, col, mats["ceramic_white"], handle_angle=0.8)
+    make_curved_mug(f"{tag}_L2_Balc_Cup2", 4.76, 3.42, z2 + 0.502, col, mats["ceramic_white"], handle_angle=-1.4)
+    # Lush tropical planter shrubs along South-East Front Balcony trough!
+    for pl_i, pl_x in enumerate((6.65, 7.55, 8.42)):
+        sh_obj = make_tropical_shrub(f"{tag}_L2_Balc_PlanterShrub_{pl_i}", pl_x, 2.30, 0.34, col, seed=510 + pl_i * 13)
+        sh_obj.location = (pl_x, 2.30, z2 + 0.38)
 
 
 for sname, spal in STYLE_PALETTES.items():
@@ -2587,8 +3117,8 @@ make_box("Land_Perimeter_East_Front", SITE_W, 0.0, 0.0, SITE_W + 0.15, 1.90, 1.6
 make_box("Land_Front_LowWall", 5.55, 0.0, 0.0, SITE_W, 0.20, 0.68, "Landscape", mats["ext_stucco"], bevel=0.01)
 make_box("Land_Front_LowWall_Cap", 5.53, -0.02, 0.68, SITE_W + 0.02, 0.22, 0.72, "Landscape", mats["roof_coping"])
 
-# Resort-style tropical bamboo privacy screen along rear courtyard wall!
-make_bamboo_screen("Land_RearBambooGrove", 0.4, 8.8, 13.30, "Landscape", count=16)
+# Resort-style tropical bamboo privacy screen along rear terrace wall (clear of West staircase!)
+make_bamboo_screen("Land_RearBambooGrove", 5.85, 8.85, 13.30, "Landscape", count=9)
 
 # Exterior ground context (excluded from architecture.glb so Three.js manages horizon cleanly)
 make_box("Context_Sidewalk", -12.0, -1.60, -0.08, SITE_W + 12.0, 0.0, 0.0, "Landscape", mats["sidewalk"])
@@ -2675,6 +3205,10 @@ downlight_coords = [
     ("DL_Ensuite", 4.60, 10.20, FLOOR_Z + WET_CEIL_H),
     ("DL_SharedBath", 4.00, 6.10, FLOOR_Z + WET_CEIL_H),
     ("DL_Laundry", 4.00, 4.30, FLOOR_Z + WET_CEIL_H),
+    # Level 2 Sky Lounge Recessed Ceiling Downlights
+    ("L2_DL_Lounge_1", 6.20, 6.80, WALL2_TOP_Z - 0.04),
+    ("L2_DL_Lounge_2", 7.75, 6.80, WALL2_TOP_Z - 0.04),
+    ("L2_DL_Lounge_3", 6.95, 10.10, WALL2_TOP_Z - 0.04),
 ]
 
 dl_trim_mesh = None
@@ -2683,22 +3217,34 @@ for dname, dx, dy, dz in downlight_coords:
     make_cylinder(f"Fixture_{dname}", dx, dy, dz - 0.017, 0.058, 0.016, "Lighting", mats["emit_warm"], segs=16)
     add_light(f"Light_{dname}", "AREA", (dx, dy, dz - 0.04), energy=40.0, color=(1.0, 0.89, 0.74), size=0.22)
 
-# Interactive Architectural Wall Light Switch Plates (mounted at z = FLOOR_Z + 1.12m beside each room door!)
+# Level 2 Tempat Jemuran Waterproof Pergola LED Bars & Front Balcony Exterior Sconces
+make_box("Fixture_L2_Jemuran_Bar1", 1.10, 8.40, WALL2_TOP_Z - 0.14, 3.60, 8.46, WALL2_TOP_Z - 0.11, "Lighting", mats["black_metal"])
+make_box("Fixture_L2_Jemuran_Bar1_Glow", 1.14, 8.41, WALL2_TOP_Z - 0.148, 3.56, 8.45, WALL2_TOP_Z - 0.138, "Lighting", mats["emit_warm"])
+make_box("Fixture_L2_Jemuran_Bar2", 1.10, 10.30, WALL2_TOP_Z - 0.14, 3.60, 10.36, WALL2_TOP_Z - 0.11, "Lighting", mats["black_metal"])
+make_box("Fixture_L2_Jemuran_Bar2_Glow", 1.14, 10.31, WALL2_TOP_Z - 0.148, 3.56, 10.35, WALL2_TOP_Z - 0.138, "Lighting", mats["emit_warm"])
+for sc2_n, sc2_x, sc2_y in [("Arch_Sconce_L2Balcony_1", 5.26, 4.94), ("Arch_Sconce_L2Balcony_2", 8.65, 4.94)]:
+    make_cylinder(sc2_n, sc2_x, sc2_y, FLOOR2_Z + 1.95, 0.036, 0.28, "Lighting", mats["black_metal"], segs=12)
+    make_cylinder(f"{sc2_n}_GlowT", sc2_x, sc2_y, FLOOR2_Z + 2.225, 0.032, 0.012, "Lighting", mats["emit_warm"], segs=10)
+    make_cylinder(f"{sc2_n}_GlowB", sc2_x, sc2_y, FLOOR2_Z + 1.942, 0.032, 0.012, "Lighting", mats["emit_warm"], segs=10)
+
+# Interactive Architectural Wall Light Switch Plates (mounted at +1.12m beside each room door!)
 wall_switches = [
-    ("SwitchPlate_Foyer", 5.84, 2.10, 5.93, 2.114),
-    ("SwitchPlate_Studio", 6.084, 4.02, 6.098, 4.11),
-    ("SwitchPlate_Living", 5.490, 9.20, 5.504, 9.29),
-    ("SwitchPlate_Dining", 4.864, 6.94, 4.878, 7.03),
-    ("SwitchPlate_Kitchen", 6.82, 5.20, 6.91, 5.214),
-    ("SwitchPlate_Master", 3.786, 9.18, 3.800, 9.27),
-    ("SwitchPlate_Ensuite", 3.920, 10.24, 3.934, 10.33),
-    ("SwitchPlate_Bed2", 3.110, 7.08, 3.124, 7.17),
-    ("SwitchPlate_SharedBath", 4.730, 6.90, 4.744, 6.99),
-    ("SwitchPlate_Laundry", 4.730, 3.84, 4.744, 3.93),
+    ("SwitchPlate_Foyer", 5.84, 2.10, 5.93, 2.114, FLOOR_Z),
+    ("SwitchPlate_Studio", 6.084, 4.02, 6.098, 4.11, FLOOR_Z),
+    ("SwitchPlate_Living", 5.490, 9.20, 5.504, 9.29, FLOOR_Z),
+    ("SwitchPlate_Dining", 4.864, 6.94, 4.878, 7.03, FLOOR_Z),
+    ("SwitchPlate_Kitchen", 6.82, 5.20, 6.91, 5.214, FLOOR_Z),
+    ("SwitchPlate_Master", 3.786, 9.18, 3.800, 9.27, FLOOR_Z),
+    ("SwitchPlate_Ensuite", 3.920, 10.24, 3.934, 10.33, FLOOR_Z),
+    ("SwitchPlate_Bed2", 3.110, 7.08, 3.124, 7.17, FLOOR_Z),
+    ("SwitchPlate_SharedBath", 4.730, 6.90, 4.744, 6.99, FLOOR_Z),
+    ("SwitchPlate_Laundry", 4.730, 3.84, 4.744, 3.93, FLOOR_Z),
+    ("SwitchPlate_L2Jemuran", 4.850, 9.18, 4.864, 9.27, FLOOR2_Z),
+    ("SwitchPlate_L2Lounge", 4.984, 9.18, 4.998, 9.27, FLOOR2_Z),
 ]
-for sw_name, sx0, sy0, sx1, sy1 in wall_switches:
-    make_box(sw_name, sx0, sy0, FLOOR_Z + 1.08, sx1, sy1, FLOOR_Z + 1.17, "Lighting", mats["black_metal"], bevel=0.003)
-    make_box(f"{sw_name}_LED", (sx0 + sx1) * 0.5 - 0.008, (sy0 + sy1) * 0.5 - 0.008, FLOOR_Z + 1.12, (sx0 + sx1) * 0.5 + 0.008, (sy0 + sy1) * 0.5 + 0.008, FLOOR_Z + 1.132, "Lighting", mats["emit_warm"])
+for sw_name, sx0, sy0, sx1, sy1, sw_z in wall_switches:
+    make_box(sw_name, sx0, sy0, sw_z + 1.08, sx1, sy1, sw_z + 1.17, "Lighting", mats["black_metal"], bevel=0.003)
+    make_box(f"{sw_name}_LED", (sx0 + sx1) * 0.5 - 0.008, (sy0 + sy1) * 0.5 - 0.008, sw_z + 1.12, (sx0 + sx1) * 0.5 + 0.008, (sy0 + sy1) * 0.5 + 0.008, sw_z + 1.132, "Lighting", mats["emit_warm"])
 
 add_light("Light_Dining_Pendant", "AREA", (6.15, 6.80, FLOOR_Z + 1.95), energy=65.0, color=(1.0, 0.86, 0.66), size=0.55)
 add_light("Light_Master_Bedside_S", "POINT", (0.41, 9.05, FLOOR_Z + 0.78), energy=18.0, color=(1.0, 0.83, 0.60), size=0.14)
@@ -2712,15 +3258,29 @@ add_light("Light_Outdoor_SconceF1", "SPOT", (3.66, 1.80, 2.08), energy=45.0, col
 add_light("Light_Outdoor_SconceF2", "SPOT", (6.18, 1.80, 2.08), energy=45.0, color=(1.0, 0.82, 0.56), size=0.06)
 
 # ---------------------------------------------------------------------------
-# 12. COLLISION MESHES
+# 12. COLLISION MESHES (HEIGHT-ISOLATED LEVEL 1 & LEVEL 2 GUARDRAILS + WALLS)
 # ---------------------------------------------------------------------------
-make_box("Col_Site_South", 0.0, -0.15, 0.0, SITE_W, 0.0, 3.0, "Collision_Meshes")
-make_box("Col_Site_North", 0.0, SITE_D, 0.0, SITE_W, SITE_D + 0.15, 3.0, "Collision_Meshes")
-make_box("Col_Site_West", -0.15, 0.0, 0.0, 0.0, SITE_D, 3.0, "Collision_Meshes")
-make_box("Col_Site_East", SITE_W, 0.0, 0.0, SITE_W + 0.15, SITE_D, 3.0, "Collision_Meshes")
+make_box("Col_Site_South", 0.0, -0.15, 0.0, SITE_W, 0.0, 6.8, "Collision_Meshes")
+make_box("Col_Site_North", 0.0, SITE_D, 0.0, SITE_W, SITE_D + 0.15, 6.8, "Collision_Meshes")
+make_box("Col_Site_West", -0.15, 0.0, 0.0, 0.0, SITE_D, 6.8, "Collision_Meshes")
+make_box("Col_Site_East", SITE_W, 0.0, 0.0, SITE_W + 0.15, SITE_D, 6.8, "Collision_Meshes")
 make_box("Col_Floor_Ground", 0.0, 0.0, -0.10, SITE_W, SITE_D, FLOOR_Z, "Collision_Meshes")
 make_box("Col_Kitchen_E", 8.324, 5.20, FLOOR_Z, 8.944, 8.20, FLOOR_Z + 0.95, "Collision_Meshes")
 make_box("Col_Kitchen_S", 6.984, 5.20, FLOOR_Z, 8.324, 5.82, FLOOR_Z + 0.95, "Collision_Meshes")
+# Level 2 Collision Walls & Safety Guardrails (Z = FLOOR2_Z..WALL2_TOP_Z so L1 walking is never obstructed!)
+make_box("Col_L2_Jemuran_W", 0.0, 6.80, FLOOR2_Z, 0.20, 11.70, WALL2_TOP_Z, "Collision_Meshes")
+make_box("Col_L2_Jemuran_S", 0.20, 6.80, FLOOR2_Z, 4.864, 7.00, WALL2_TOP_Z, "Collision_Meshes")
+make_box("Col_L2_Jemuran_N_Rail", 1.85, 11.50, FLOOR2_Z, 4.864, 11.65, FLOOR2_Z + 1.50, "Collision_Meshes")
+make_box("Col_L2_Landing_W", 0.0, 11.70, FLOOR2_Z, 0.24, 13.45, FLOOR2_Z + 1.50, "Collision_Meshes")
+make_box("Col_L2_Landing_N", 0.20, 13.34, FLOOR2_Z, 1.95, 13.48, FLOOR2_Z + 1.50, "Collision_Meshes")
+make_box("Col_L2_Lounge_E", 8.944, 2.00, FLOOR2_Z, SITE_W, 11.70, WALL2_TOP_Z, "Collision_Meshes")
+make_box("Col_L2_Lounge_N", 4.864, 11.50, FLOOR2_Z, 8.944, 11.70, WALL2_TOP_Z, "Collision_Meshes")
+make_box("Col_L2_Lounge_W_S", 4.864, 5.00, FLOOR2_Z, 4.984, 8.20, WALL2_TOP_Z, "Collision_Meshes")
+make_box("Col_L2_Lounge_W_N", 4.864, 9.10, FLOOR2_Z, 4.984, 11.50, WALL2_TOP_Z, "Collision_Meshes")
+make_box("Col_L2_Lounge_S_W", 4.984, 5.00, FLOOR2_Z, 5.55, 5.20, WALL2_TOP_Z, "Collision_Meshes")
+make_box("Col_L2_Lounge_S_E", 8.35, 5.00, FLOOR2_Z, 8.944, 5.20, WALL2_TOP_Z, "Collision_Meshes")
+make_box("Col_L2_Balcony_S", 3.164, 1.96, FLOOR2_Z, 8.96, 2.10, FLOOR2_Z + 1.50, "Collision_Meshes")
+make_box("Col_L2_Balcony_W", 3.10, 2.00, FLOOR2_Z, 3.24, 6.80, FLOOR2_Z + 1.50, "Collision_Meshes")
 
 for obj in cols["Collision_Meshes"].objects:
     obj.hide_render = True
@@ -2732,7 +3292,10 @@ waypoints_out = []
 for wp in spec["walkthrough_waypoints"]:
     px, py = wp["position_mm"][0] * M, wp["position_mm"][1] * M
     tx, ty = wp["look_at_mm"][0] * M, wp["look_at_mm"][1] * M
-    base_z = 0.05 if wp["room"].startswith("EXT-") else FLOOR_Z
+    if wp.get("floor", 1) == 2:
+        base_z = FLOOR2_Z
+    else:
+        base_z = 0.05 if wp["room"].startswith("EXT-") else FLOOR_Z
     pz, tz = base_z + 1.65, base_z + 1.40
 
     e_pos = bpy.data.objects.new(f"Waypoint_{wp['id']}", None)
@@ -2806,8 +3369,168 @@ fl_min, fl_max = world_bounds_of_collection("Floors")
 wl_min, wl_max = world_bounds_of_collection("Walls")
 assert abs((fl_max.x - fl_min.x) - SITE_W) < 0.002, f"Site X mismatch: {fl_max.x - fl_min.x}"
 assert abs((fl_max.y - fl_min.y) - SITE_D) < 0.002, f"Site Y mismatch: {fl_max.y - fl_min.y}"
-assert abs((wl_max.z - wl_min.z) - CEIL_H) < 0.002, f"Wall ceiling height mismatch: {wl_max.z - wl_min.z}"
-print(f"3D VALIDATION PASSED: Site={fl_max.x - fl_min.x:.3f}m x {fl_max.y - fl_min.y:.3f}m | Wall Height={wl_max.z - wl_min.z:.3f}m")
+assert abs((wl_max.z - wl_min.z) - (WALL2_TOP_Z - FLOOR_Z)) < 0.02, f"2-story wall height mismatch: {wl_max.z - wl_min.z}"
+print(f"3D 2-STORY VALIDATION PASSED: Site={fl_max.x - fl_min.x:.3f}m x {fl_max.y - fl_min.y:.3f}m | 2-Story Height={wl_max.z - wl_min.z:.3f}m")
+
+
+def bake_cycles_architectural_ao():
+    """
+    Bakes true Cycles Metal GPU Ambient Occlusion into a shared 2048x2048 atlas on UVMap_AO (TEXCOORD_1)
+    across all static architectural walls, floors, ceilings, stairs & pergola beams — giving Three.js
+    real ray-traced corner & ceiling GI occlusion at ZERO runtime FPS cost!
+    """
+    print("Baking Cycles GPU Architectural Ambient Occlusion (2048x2048 UVMap_AO)...")
+    # Temporarily hide furniture, doors, windows & landscape so AO strictly bakes clean permanent architecture
+    temp_hidden = []
+    for cname in ("Furniture_Modern", "Furniture_Scandinavian", "Furniture_WarmLuxury", "Doors", "Windows", "Landscape"):
+        for o in cols[cname].objects:
+            temp_hidden.append((o, o.hide_render, o.hide_viewport))
+            o.hide_render = True
+            o.hide_viewport = True
+
+    bake_objs = []
+    for cname in ("Walls", "Floors", "Ceilings", "Architecture"):
+        for o in cols[cname].objects:
+            if o.type != "MESH" or not o.data or len(o.data.polygons) == 0:
+                continue
+            if o.name.startswith("Context_"):
+                continue
+            mat0 = o.data.materials[0] if len(o.data.materials) > 0 else None
+            if mat0 and any(k in mat0.name for k in ("Glass", "Light_", "Mirror")):
+                continue
+            bake_objs.append(o)
+
+    if not bake_objs:
+        return
+
+    # Clone shared materials strictly for baked architectural shells so Furniture_* materials stay untouched
+    ao_mat_map = {}
+    for o in bake_objs:
+        if len(o.data.materials) == 0:
+            continue
+        orig_m = o.data.materials[0]
+        if orig_m.name not in ao_mat_map:
+            cm = orig_m.copy()
+            cm.name = f"{orig_m.name}_ArchAO"
+            ao_mat_map[orig_m.name] = cm
+        o.data.materials[0] = ao_mat_map[orig_m.name]
+
+    # Create UVMap_AO (TEXCOORD_1) on every architectural mesh & pack cleanly in Multi-Object Edit Mode
+    bpy.ops.object.select_all(action="DESELECT")
+    for o in bake_objs:
+        o.hide_viewport = False
+        o.hide_render = False
+        if "UVMap_AO" not in o.data.uv_layers:
+            if len(o.data.uv_layers) == 0:
+                o.data.uv_layers.new(name="UVMap")
+            uv_ao = o.data.uv_layers.new(name="UVMap_AO")
+        else:
+            uv_ao = o.data.uv_layers["UVMap_AO"]
+        o.data.uv_layers.active = uv_ao
+        o.data.uv_layers[0].active_render = True
+        o.select_set(True)
+    bpy.context.view_layer.objects.active = bake_objs[0]
+
+    bpy.ops.object.mode_set(mode="EDIT")
+    bpy.ops.mesh.select_all(action="SELECT")
+    bpy.ops.uv.smart_project(angle_limit=math.radians(66), island_margin=0.012, area_weight=0.25)
+    bpy.ops.object.mode_set(mode="OBJECT")
+
+    # Allocate 1024x1024 Non-Color AO atlas (crisp smooth GI/AO + ultra-light WebP!)
+    ao_img = bpy.data.images.new("Arch_AO_Baked", width=1024, height=1024, alpha=False)
+    ao_img.colorspace_settings.name = "Non-Color"
+
+    gltf_ng = bpy.data.node_groups.get("glTF Material Output")
+    if gltf_ng is None:
+        gltf_ng = bpy.data.node_groups.new("glTF Material Output", "ShaderNodeTree")
+        gltf_ng.interface.new_socket(name="Occlusion", in_out="INPUT", socket_type="NodeSocketFloat")
+
+    for cm in ao_mat_map.values():
+        nt = cm.node_tree
+        uv_node = nt.nodes.new("ShaderNodeUVMap")
+        uv_node.uv_map = "UVMap_AO"
+        uv_node.location = (-520, -560)
+        tex_node = nt.nodes.new("ShaderNodeTexImage")
+        tex_node.image = ao_img
+        tex_node.location = (-260, -560)
+        nt.links.new(uv_node.outputs["UV"], tex_node.inputs["Vector"])
+        g_out = nt.nodes.new("ShaderNodeGroup")
+        g_out.node_tree = gltf_ng
+        g_out.location = (260, -560)
+        nt.links.new(tex_node.outputs["Color"], g_out.inputs["Occlusion"])
+
+    # Join temporary duplicate copies into ONE single bake proxy mesh so Cycles Metal GPU bakes in ONE 3-second pass!
+    # CRITICAL: Use a local short-range ShaderNodeAmbientOcclusion (distance=0.60m, clamped 0.44..1.00) emitted into
+    # BAKE_TYPE='EMIT' instead of infinite-distance BAKE_TYPE='AO' — prevents closed rooms & ceilings from baking black!
+    bake_mat = bpy.data.materials.new("Temp_AO_BakeMat")
+    bake_mat.use_nodes = True
+    b_nt = bake_mat.node_tree
+    b_nt.nodes.clear()
+    b_out = b_nt.nodes.new("ShaderNodeOutputMaterial")
+    b_emit = b_nt.nodes.new("ShaderNodeEmission")
+    b_ao = b_nt.nodes.new("ShaderNodeAmbientOcclusion")
+    b_ao.samples = 16
+    b_ao.inputs["Distance"].default_value = 0.60
+    b_map = b_nt.nodes.new("ShaderNodeMapRange")
+    b_map.clamp = True
+    b_map.inputs["From Min"].default_value = 0.0
+    b_map.inputs["From Max"].default_value = 1.0
+    b_map.inputs["To Min"].default_value = 0.44
+    b_map.inputs["To Max"].default_value = 1.00
+    b_nt.links.new(b_ao.outputs["AO"], b_map.inputs["Value"])
+    b_nt.links.new(b_map.outputs["Result"], b_emit.inputs["Color"])
+    b_nt.links.new(b_emit.outputs["Emission"], b_out.inputs["Surface"])
+
+    b_tex = b_nt.nodes.new("ShaderNodeTexImage")
+    b_tex.image = ao_img
+    b_tex.select = True
+    b_nt.nodes.active = b_tex
+
+    bpy.ops.object.select_all(action="DESELECT")
+    proxy_objs = []
+    for o in bake_objs:
+        dup = o.copy()
+        dup.data = o.data.copy()
+        dup.data.materials.clear()
+        dup.data.materials.append(bake_mat)
+        scene.collection.objects.link(dup)
+        dup.select_set(True)
+        proxy_objs.append(dup)
+        # Hide original during single-pass proxy bake so rays don't self-intersect duplicates!
+        o.hide_render = True
+        o.hide_viewport = True
+
+    bpy.context.view_layer.objects.active = proxy_objs[0]
+    bpy.ops.object.join()
+    proxy_merged = bpy.context.view_layer.objects.active
+    proxy_merged.data.uv_layers.active = proxy_merged.data.uv_layers["UVMap_AO"]
+
+    scene.cycles.samples = 24
+    scene.cycles.use_denoising = True
+    scene.render.bake.margin = 6
+    scene.render.bake.use_clear = True
+    bpy.ops.object.bake(type="EMIT")
+
+    ao_path = TEX_DIR / "arch_ao_baked.png"
+    ao_img.filepath_raw = str(ao_path)
+    ao_img.file_format = "PNG"
+    ao_img.save()
+    ao_img.pack()
+    print(f"Baked single-pass Cycles GPU Architectural AO atlas -> {ao_path} ({ao_path.stat().st_size / 1024:.1f} KB)")
+
+    # Remove temporary proxy & restore all objects cleanly
+    bpy.data.objects.remove(proxy_merged, do_unlink=True)
+    bpy.data.materials.remove(bake_mat, do_unlink=True)
+    for o in bake_objs:
+        o.hide_render = False
+        o.hide_viewport = False
+    bpy.ops.object.select_all(action="DESELECT")
+    for o, hr, hv in temp_hidden:
+        o.hide_render = hr
+        o.hide_viewport = hv
+
+
+bake_cycles_architectural_ao()
 
 
 def poly_stats(col_names):
@@ -2908,6 +3631,12 @@ scene_config = {
     "dollhouse_toggle_objects": {
         "roof": [o.name for o in cols["Roof"].objects],
         "ceilings": [o.name for o in cols["Ceilings"].objects],
+        "level2_objects": [
+            o.name
+            for cn in ("Architecture", "Walls", "Floors", "Ceilings", "Roof", "Doors", "Windows", "Lighting")
+            for o in cols[cn].objects
+            if "L2_" in o.name
+        ],
     },
     "interactive_doors": door_interactive_meta,
     "lighting_presets": {

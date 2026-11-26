@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
-import type { CameraMode, FloorplanSpec, RoomSpec } from '../types';
+import type { CameraMode, FloorFilter, FloorplanSpec, RoomSpec } from '../types';
 
 export interface CameraTransition {
   fromPos: THREE.Vector3;
@@ -19,12 +19,16 @@ export class CameraController {
   public readonly orbit: OrbitControls;
 
   public mode: CameraMode = 'exterior';
+  public floorFilter: FloorFilter = 'all';
   private readonly dom: HTMLElement;
   private readonly floorplan: FloorplanSpec;
   private collisionBoxes: THREE.Box3[] = [];
   private dynamicColliderProvider?: () => THREE.Box3[];
   private readonly roofObjects: THREE.Object3D[];
   private readonly ceilingObjects: THREE.Object3D[];
+  private readonly level2Objects: THREE.Object3D[];
+  private activeStyleGroup: THREE.Object3D | null = null;
+  private roofVisible = true;
 
   // First-person walkthrough state (eye height strictly 1.65 m above floor)
   private fpYaw = 0;
@@ -47,17 +51,19 @@ export class CameraController {
     floorplan: FloorplanSpec,
     roofObjects: THREE.Object3D[],
     ceilingObjects: THREE.Object3D[],
+    level2Objects: THREE.Object3D[],
     onModeChanged?: (mode: CameraMode) => void
   ) {
     this.dom = dom;
     this.floorplan = floorplan;
     this.roofObjects = roofObjects;
     this.ceilingObjects = ceilingObjects;
+    this.level2Objects = level2Objects;
     this.onModeChanged = onModeChanged;
 
     const aspect = Math.max(1, dom.clientWidth) / Math.max(1, dom.clientHeight);
-    this.perspCamera = new THREE.PerspectiveCamera(48, aspect, 0.06, 280);
-    this.perspCamera.position.set(11.4, 3.1, 6.2);
+    this.perspCamera = new THREE.PerspectiveCamera(46, aspect, 0.06, 280);
+    this.perspCamera.position.set(11.4, 4.8, 9.2);
 
     const halfH = this.orthoFrustumHeight * 0.5;
     const halfW = halfH * aspect;
@@ -71,10 +77,10 @@ export class CameraController {
     this.orbit = new OrbitControls(this.perspCamera, dom);
     this.orbit.enableDamping = true;
     this.orbit.dampingFactor = 0.07;
-    this.orbit.target.set(4.5, 1.75, -5.2);
+    this.orbit.target.set(4.55, 2.75, -5.6);
     this.orbit.maxPolarAngle = Math.PI * 0.49;
     this.orbit.minDistance = 2.0;
-    this.orbit.maxDistance = 32.0;
+    this.orbit.maxDistance = 36.0;
     this.orbit.update();
 
     this.bindInputListeners();
@@ -88,13 +94,53 @@ export class CameraController {
     this.dynamicColliderProvider = provider;
   }
 
+  setActiveStyleGroup(group: THREE.Object3D | null): void {
+    this.activeStyleGroup = group;
+    this.applyVisibilityRules();
+  }
+
+  setFloorFilter(filter: FloorFilter): void {
+    this.floorFilter = filter;
+    this.applyVisibilityRules();
+  }
+
+  private applyVisibilityRules(): void {
+    const showL2 = this.floorFilter !== '1';
+    // 1. Toggle Level 2 architectural shell & L2 furniture
+    for (const o of this.level2Objects) {
+      o.visible = showL2;
+    }
+    if (this.activeStyleGroup) {
+      this.activeStyleGroup.traverse((obj) => {
+        if (obj.name.includes('L2_')) {
+          obj.visible = showL2;
+        }
+      });
+    }
+    // 2. Toggle Roof & Ceilings cleanly per floor filter & cutaway mode
+    for (const o of this.roofObjects) {
+      const isL2 = o.name.includes('L2_');
+      o.visible = this.roofVisible && (!isL2 || showL2);
+    }
+    for (const o of this.ceilingObjects) {
+      const isL2 = o.name.includes('L2_');
+      if (this.floorFilter === '1') {
+        o.visible = false; // Show unobstructed Ground Floor rooms!
+      } else if (this.floorFilter === '2') {
+        o.visible = !isL2; // Keep L1 ceilings visible under L2 floor, hide L2 ceilings!
+      } else {
+        o.visible = this.roofVisible && (!isL2 || showL2);
+      }
+    }
+  }
+
   setRoofCeilingVisible(visible: boolean): void {
-    for (const o of this.roofObjects) o.visible = visible;
-    for (const o of this.ceilingObjects) o.visible = visible;
+    this.roofVisible = visible;
+    this.applyVisibilityRules();
   }
 
   isRoofVisible(): boolean {
-    return this.roofObjects.length > 0 ? this.roofObjects[0].visible : true;
+    return this.roofVisible;
   }
 
   toggleRoofCeiling(): boolean {
@@ -126,15 +172,16 @@ export class CameraController {
       this.activeCamera = this.perspCamera;
       this.perspCamera.fov = 46;
       this.perspCamera.updateProjectionMatrix();
+      this.floorFilter = 'all';
       this.setRoofCeilingVisible(true);
       this.orbit.object = this.perspCamera;
       this.orbit.enabled = true;
       this.orbit.enableRotate = true;
       this.orbit.maxPolarAngle = Math.PI * 0.485;
       this.orbit.minDistance = 3.2;
-      this.orbit.maxDistance = 32.0;
-      const toPos = new THREE.Vector3(11.4, 3.1, 6.2);
-      const toTgt = new THREE.Vector3(4.5, 1.75, -5.2);
+      this.orbit.maxDistance = 36.0;
+      const toPos = new THREE.Vector3(11.4, 4.8, 9.2);
+      const toTgt = new THREE.Vector3(4.55, 2.80, -5.8);
       this.flyTo(toPos, toTgt, instant ? 0 : 0.95);
     } else if (mode === 'dollhouse') {
       this.activeCamera = this.perspCamera;
@@ -146,11 +193,12 @@ export class CameraController {
       this.orbit.enableRotate = true;
       this.orbit.maxPolarAngle = Math.PI * 0.44;
       this.orbit.minDistance = 4.0;
-      this.orbit.maxDistance = 30.0;
-      const toPos = new THREE.Vector3(14.5, 14.2, 4.8);
-      const toTgt = new THREE.Vector3(4.572, 0.8, -6.75);
+      this.orbit.maxDistance = 34.0;
+      const toPos = new THREE.Vector3(15.8, 17.2, 6.2);
+      const toTgt = new THREE.Vector3(4.572, 2.1, -6.75);
       this.flyTo(toPos, toTgt, instant ? 0 : 1.05);
     } else if (mode === 'floorplan') {
+      if (this.floorFilter === 'all') this.floorFilter = '1';
       this.setRoofCeilingVisible(false);
       this.activeCamera = this.orthoCamera;
       this.orthoCamera.position.set(4.572, 24, -6.75);
@@ -167,15 +215,16 @@ export class CameraController {
       this.activeCamera = this.perspCamera;
       this.perspCamera.fov = 60;
       this.perspCamera.updateProjectionMatrix();
+      this.floorFilter = 'all';
       this.setRoofCeilingVisible(true);
       this.orbit.enabled = false;
       // Default start inside Foyer looking toward Open Living/Dining if currently far outside
       const cur = this.perspCamera.position;
-      const insideSite = cur.x > 0.3 && cur.x < 8.8 && cur.z < -0.3 && cur.z > -13.2 && cur.y < 3.0;
+      const insideSite = cur.x > 0.3 && cur.x < 8.8 && cur.z < -0.3 && cur.z > -13.2 && cur.y < 6.0;
       if (!insideSite) {
         this.teleportFirstPerson(new THREE.Vector3(4.7, 1.8, -2.8), new THREE.Vector3(6.2, 1.65, -7.8), instant);
       } else {
-        const floorY = this.getFloorElevation(cur.x, cur.z);
+        const floorY = this.getFloorElevation(cur.x, cur.z, cur.y);
         cur.y = floorY + 1.65;
         this.syncYawPitchFromCamera();
       }
@@ -192,10 +241,12 @@ export class CameraController {
     const room = this.floorplan.rooms.find((r) => r.id === roomId);
     if (room) {
       const [lx, ly] = room.label_pos;
-      const pos = new THREE.Vector3(lx / 1000, 0.15 + 1.65, -ly / 1000);
+      const baseZ = room.floor === 2 ? 3.35 : 0.15;
+      const pos = new THREE.Vector3(lx / 1000, baseZ + 1.65, -ly / 1000);
       // Aim gracefully toward room focal point or open living center
       const look = this.getRoomLookTarget(room, pos);
       this.mode = 'firstperson';
+      this.floorFilter = 'all';
       this.activeCamera = this.perspCamera;
       this.perspCamera.fov = 60;
       this.perspCamera.updateProjectionMatrix();
@@ -210,10 +261,14 @@ export class CameraController {
     if (ext) {
       const cx = (ext.bounds.x0 + ext.bounds.x1) * 0.5 / 1000;
       const cy = (ext.bounds.y0 + ext.bounds.y1) * 0.5 / 1000;
-      const baseZ = ext.id === 'EXT-04' ? 0.11 : 0.04;
+      const baseZ = ext.floor === 2 ? 3.33 : ext.id === 'EXT-04' ? 0.11 : 0.04;
       const pos = new THREE.Vector3(cx, baseZ + 1.65, -cy);
-      const look = new THREE.Vector3(4.57, 1.55, -6.75);
+      const look =
+        ext.floor === 2
+          ? new THREE.Vector3(6.8, 4.55, -7.2)
+          : new THREE.Vector3(4.57, 1.55, -6.75);
       this.mode = 'firstperson';
+      this.floorFilter = 'all';
       this.activeCamera = this.perspCamera;
       this.perspCamera.fov = 60;
       this.perspCamera.updateProjectionMatrix();
@@ -237,13 +292,15 @@ export class CameraController {
       'RM-09': [7.4, 1.45, -12.2],
       'RM-10': [8.0, 1.4, -6.5],
       'RM-11': [7.2, 1.45, -9.8],
+      'RM-12': [1.7, 4.45, -8.2],
+      'RM-13': [6.8, 4.55, -5.8],
     };
     const t = targets[room.id];
     return t ? new THREE.Vector3(t[0], t[1], t[2]) : pos.clone().add(new THREE.Vector3(0, -0.1, -2.0));
   }
 
   teleportFirstPerson(pos: THREE.Vector3, lookAt: THREE.Vector3, instant = false): void {
-    const floorY = this.getFloorElevation(pos.x, pos.z);
+    const floorY = this.getFloorElevation(pos.x, pos.z, pos.y);
     const exactPos = new THREE.Vector3(pos.x, floorY + 1.65, pos.z);
     if (instant) {
       this.perspCamera.position.copy(exactPos);
@@ -295,9 +352,20 @@ export class CameraController {
     };
   }
 
-  private getFloorElevation(x: number, z: number): number {
-    // Inside building footprint (Y_cad = -z): [3.044..9.144, 1.9..5.0] or [0..9.144, 5.0..11.7]
+  private getFloorElevation(x: number, z: number, curEyeY = 1.8): number {
+    // Smooth WASD Staircase Climbing & 2-Story Floor Elevation (Y_cad = -z)
     const yCad = -z;
+    // Covered floating rear staircase: X = 5.55 (bottom 0.11m) -> X = 1.90 (top 3.35m), Y_cad = 12.40..13.46
+    if (yCad >= 12.40 && yCad <= 13.48 && x >= 1.82 && x <= 5.64) {
+      const t = THREE.MathUtils.clamp((5.55 - x) / (5.55 - 1.90), 0, 1);
+      return 0.11 + t * (3.35 - 0.11);
+    }
+    // Level 2 floor plate (when standing on L2 landing, Tempat Jemuran, Sky Lounge, or Front Balcony)
+    if (curEyeY >= 3.2) {
+      if (x >= 3.10 && x <= 9.05 && yCad >= 1.95 && yCad <= 5.05) return 3.33; // EXT-05 Front Sky Balcony
+      return 3.35; // RM-12 Tempat Jemuran, RM-13 Sky Lounge & Upper Landing
+    }
+    // Level 1 Ground Floor footprint: [3.044..9.144, 1.9..5.0] or [0..9.144, 5.0..11.7]
     const inMain = x >= 0.05 && x <= 9.1 && yCad >= 5.0 && yCad <= 11.7;
     const inFront = x >= 3.04 && x <= 9.1 && yCad >= 1.9 && yCad <= 5.0;
     if (inMain || inFront) return 0.15;
@@ -454,9 +522,9 @@ export class CameraController {
         this.fpVelocity.z = 0;
       }
 
-      // Smooth eye height locked to 1.65 m above local finished floor elevation
-      const targetEyeY = this.getFloorElevation(cur.x, cur.z) + 1.65;
-      cur.y = THREE.MathUtils.lerp(cur.y, targetEyeY, Math.min(1, dt * 10));
+      // Smooth eye height locked to 1.65 m above local finished floor elevation (including stairs & Level 2!)
+      const targetEyeY = this.getFloorElevation(cur.x, cur.z, cur.y) + 1.65;
+      cur.y = THREE.MathUtils.lerp(cur.y, targetEyeY, Math.min(1, dt * 11));
     } else {
       this.orbit.update();
     }

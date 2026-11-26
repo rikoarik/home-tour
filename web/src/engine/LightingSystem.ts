@@ -36,10 +36,12 @@ export interface LightZoneGroup {
  */
 export function resolveLightGroupIdFromName(n: string): string | null {
   if (!n) return null;
-  const batchMatch = n.match(/^Batch_(?:CEIL_)?LIGHT_([A-Za-z0-9_]+?)__/);
+  const batchMatch = n.match(/^Batch_(?:L2_)?(?:CEIL_)?LIGHT_([A-Za-z0-9_]+?)__/);
   if (batchMatch) return batchMatch[1];
 
   // 1. Wall Light Switch Plates
+  if (n.includes('SwitchPlate_L2Jemuran')) return 'L2_Drying_Deck';
+  if (n.includes('SwitchPlate_L2Lounge')) return 'L2_Sky_Lounge';
   if (n.includes('SwitchPlate_Living')) return 'Living_Main';
   if (n.includes('SwitchPlate_Dining')) return 'Dining_Pendant';
   if (n.includes('SwitchPlate_Kitchen')) return 'Kitchen_Task';
@@ -51,7 +53,9 @@ export function resolveLightGroupIdFromName(n: string): string | null {
   if (n.includes('SwitchPlate_SharedBath')) return 'Shared_Bath';
   if (n.includes('SwitchPlate_Laundry')) return 'Laundry';
 
-  // 2. Ceiling Recessed Downlights
+  // 2. Ceiling Recessed Downlights & L2 Pergola LED Bars
+  if (n.includes('Fixture_L2_DL_Lounge')) return 'L2_Sky_Lounge';
+  if (n.includes('Fixture_L2_Jemuran')) return 'L2_Drying_Deck';
   if (n.includes('Fixture_DL_Living')) return 'Living_Main';
   if (n.includes('Fixture_DL_Dining')) return 'Dining_Pendant';
   if (n.includes('Fixture_DL_Kitchen')) return 'Kitchen_Task';
@@ -76,7 +80,8 @@ export function resolveLightGroupIdFromName(n: string): string | null {
   if (n.includes('F-B2-NS_Lamp')) return 'Bedroom_2';
   if (n.includes('F-SB-VAN_MirrorHalo')) return 'Shared_Bath';
 
-  // 4. Exterior Sconces, Bollards & Terrace Lantern
+  // 4. Exterior Sconces, Bollards, L2 Balcony Sconces & Stair LEDs
+  if (n.includes('Arch_Sconce_L2Balcony') || n.includes('L2_Stair_LED')) return 'L2_Balcony';
   if (n.includes('Arch_Sconce_Front') || n.includes('Arch_Bollard_Front') || n.includes('Arch_HouseNumber_Backlight')) return 'Exterior_Front';
   if (n.includes('Arch_Sconce_Rear') || n.includes('Arch_Bollard_Rear') || n.includes('Decor_Terrace_Lantern')) return 'Exterior_Rear';
   return null;
@@ -93,6 +98,9 @@ export class LightingSystem {
   private readonly envHorizon: THREE.Mesh;
   private readonly pmrem: THREE.PMREMGenerator;
   private envRT: THREE.WebGLRenderTarget | null = null;
+  private readonly skyPanoramas: Partial<Record<'day' | 'sunset' | 'night', THREE.Texture>> = {};
+  private readonly skyPmrems: Partial<Record<'day' | 'sunset' | 'night', THREE.WebGLRenderTarget>> = {};
+  private activeSkyKey: 'day' | 'sunset' | 'night' = 'day';
   private readonly lightPool: THREE.PointLight[] = [];
   private readonly allSources: LogicalLightSource[] = [];
   private readonly lightGroups = new Map<string, LightZoneGroup>();
@@ -153,37 +161,37 @@ export class LightingSystem {
     this.pmrem = new THREE.PMREMGenerator(renderer);
     this.pmrem.compileEquirectangularShader();
 
-    // Primary Sun Directional Light with crisp 2048x2048 on-demand cached shadows tightly fitted to the 9.144 x 13.500 m plot
+    // Primary Sun Directional Light with crisp 2048x2048 on-demand cached shadows fitted cleanly to the 2-story villa
     this.sunLight = new THREE.DirectionalLight(0xfff4e4, 3.35);
     this.sunLight.castShadow = true;
     this.sunLight.shadow.mapSize.set(2048, 2048);
     this.sunLight.shadow.camera.near = 2;
-    this.sunLight.shadow.camera.far = 42;
-    const d = 9.6;
+    this.sunLight.shadow.camera.far = 48;
+    const d = 10.8;
     this.sunLight.shadow.camera.left = -d;
     this.sunLight.shadow.camera.right = d;
     this.sunLight.shadow.camera.top = d;
     this.sunLight.shadow.camera.bottom = -d;
-    this.sunLight.shadow.bias = -0.0002;
-    this.sunLight.shadow.normalBias = 0.011;
+    this.sunLight.shadow.bias = -0.00022;
+    this.sunLight.shadow.normalBias = 0.012;
     this.sunLight.shadow.radius = 2.2;
-    this.sunLight.target.position.set(4.57, 1.2, -6.75);
+    this.sunLight.target.position.set(4.57, 2.4, -6.75);
     this.scene.add(this.sunLight);
     this.scene.add(this.sunLight.target);
 
     // Zero-shadow Cool-Sky Architectural Bounce Fill Light (opposite sun azimuth) for photographic warm-sun / cool-shadow depth
-    this.fillLight = new THREE.DirectionalLight(0xcfe4ff, 0.42);
+    this.fillLight = new THREE.DirectionalLight(0xcfe4ff, 0.44);
     this.fillLight.castShadow = false;
-    this.fillLight.target.position.set(4.57, 1.2, -6.75);
+    this.fillLight.target.position.set(4.57, 2.4, -6.75);
     this.scene.add(this.fillLight);
     this.scene.add(this.fillLight.target);
 
-    // Subtle physical sky/ground ambient bounce (kept restrained so shadows & GTAO remain crisp and rich)
-    this.hemiLight = new THREE.HemisphereLight(0xdcecff, 0x736350, 0.36);
+    // Natural sky & warm floor-bounce ambient light (paired with short-range Cycles local AO for crisp bright ceilings & deep corners)
+    this.hemiLight = new THREE.HemisphereLight(0xdcecff, 0xb0a390, 0.50);
     this.scene.add(this.hemiLight);
-    this.scene.fog = new THREE.FogExp2(0xd8e6f2, 0.0016);
+    this.scene.fog = new THREE.FogExp2(0xd8e6f2, 0.0014);
 
-    // Fixed 6-light WebGL PointLight pool (#define NUM_POINT_LIGHTS 6 instead of 18 => 3x lighter PBR fragment shader!)
+    // Fixed 6-light WebGL PointLight pool (#define NUM_POINT_LIGHTS 6 instead of 21 => 3.5x lighter PBR fragment shader!)
     for (let i = 0; i < LightingSystem.LIGHT_POOL_SIZE; i++) {
       const pl = new THREE.PointLight(0xffd6a6, 0, 5.0, 2.0);
       pl.name = `Pooled_Light_${i}`;
@@ -193,7 +201,48 @@ export class LightingSystem {
     }
 
     this.createPracticalLights();
+    this.loadCloudySkyPanoramas();
     this.setTimeOfDay(this.hour, true);
+  }
+
+  private loadCloudySkyPanoramas(): void {
+    const texLoader = new THREE.TextureLoader();
+    const specs: Array<['day' | 'sunset' | 'night', string]> = [
+      ['day', 'sky_day_clouds.webp'],
+      ['sunset', 'sky_sunset_clouds.webp'],
+      ['night', 'sky_night_stars.webp'],
+    ];
+    for (const [key, fname] of specs) {
+      const b64 = window.__EMBEDDED_ASSETS__?.[fname];
+      const url = b64 ? `data:image/webp;base64,${b64}` : `./assets/${fname}`;
+      texLoader.load(url, (tex) => {
+        tex.mapping = THREE.EquirectangularReflectionMapping;
+        tex.colorSpace = THREE.SRGBColorSpace;
+        tex.needsUpdate = true;
+        this.skyPanoramas[key] = tex;
+        this.skyPmrems[key] = this.pmrem.fromEquirectangular(tex);
+        if (key === this.activeSkyKey) {
+          this.applyActiveSkyPanorama();
+        }
+      });
+    }
+  }
+
+  private applyActiveSkyPanorama(): void {
+    const key: 'day' | 'sunset' | 'night' =
+      this.hour >= 19.7 ? 'night' : this.hour >= 17.0 || this.hour < 7.0 ? 'sunset' : 'day';
+    this.activeSkyKey = key;
+    const pmremRT = this.skyPmrems[key];
+    const pano = this.skyPanoramas[key];
+    if (pmremRT) {
+      this.scene.environment = pmremRT.texture;
+      this.scene.environmentIntensity = key === 'night' ? 0.24 : key === 'sunset' ? 0.50 : 0.56;
+    }
+    if (!this.studioBackdrop && pano) {
+      this.sky.visible = false;
+      this.scene.background = pano;
+      this.scene.backgroundBlurriness = 0.015;
+    }
   }
 
   private registerGroup(id: string, label: string, isExterior = false): LightZoneGroup {
@@ -231,6 +280,8 @@ export class LightingSystem {
       ['Bedroom_2', 'Bedroom 2 Ceiling & Bedside Lamp', 1.65, 2.80, -6.7, 1.85, 4.0],
       ['Shared_Bath', 'Shared Bathroom Ceiling & Vanity Halo', 4.0, 2.70, -6.1, 1.45, 3.1],
       ['Laundry', 'Laundry & Utility Ceiling Light', 4.0, 2.70, -4.3, 1.35, 2.9],
+      ['L2_Drying_Deck', 'L2 Tempat Jemuran Skylight Pergola LEDs', 2.40, 5.95, -9.20, 2.20, 5.2],
+      ['L2_Sky_Lounge', 'L2 Sky Lounge Recessed Downlights', 6.95, 5.98, -8.30, 2.35, 5.4],
     ];
 
     for (const [id, label, x, y, z, intensity, distance] of indoorSpecs) {
@@ -254,6 +305,8 @@ export class LightingSystem {
       ['Exterior_Front', 'Front Porch, Facade Sconces & Garden Bollards', 1.55, 2.65, -2.5, 2.2, 6.2],
       ['Exterior_Rear', 'Rear Terrace, Courtyard Sconces, Bollards & Lantern', 6.8, 2.85, -12.3, 2.7, 6.4],
       ['Exterior_Rear', 'Rear Terrace, Courtyard Sconces, Bollards & Lantern', 8.2, 2.85, -12.3, 2.3, 6.0],
+      ['L2_Balcony', 'L2 Front Sky Balcony Sconces & Stair LEDs', 6.8, 5.40, -4.4, 2.4, 6.2],
+      ['L2_Balcony', 'L2 Front Sky Balcony Sconces & Stair LEDs', 3.6, 2.25, -12.95, 1.8, 5.4],
     ];
 
     for (const [id, label, x, y, z, intensity, distance] of outdoorSpecs) {
@@ -563,8 +616,8 @@ export class LightingSystem {
       this.fillLight.color.setHex(0xcfe4ff);
       this.fillLight.intensity = 0.22 + 0.24 * transmittance;
       this.hemiLight.color.setHex(0xdcecff);
-      this.hemiLight.groundColor.setHex(0x766652);
-      this.hemiLight.intensity = 0.24 + 0.18 * transmittance;
+      this.hemiLight.groundColor.setHex(0xb0a390);
+      this.hemiLight.intensity = 0.34 + 0.22 * transmittance;
       if (this.scene.fog instanceof THREE.FogExp2) {
         this.scene.fog.color.setHex(0xf2cfb0).lerp(new THREE.Color(0xd8e6f2), transmittance);
         this.scene.fog.density = 0.0016;
@@ -583,7 +636,9 @@ export class LightingSystem {
     this.syncPracticalLightOutputs();
 
     const now = performance.now();
-    if (forceEnvUpdate || now - this.lastEnvUpdate >= this.envUpdateIntervalMs) {
+    if (this.skyPmrems[this.hour >= 19.7 ? 'night' : this.hour >= 17.0 || this.hour < 7.0 ? 'sunset' : 'day']) {
+      this.applyActiveSkyPanorama();
+    } else if (forceEnvUpdate || now - this.lastEnvUpdate >= this.envUpdateIntervalMs) {
       this.updateEnvironmentIBL(isNight);
       this.lastEnvUpdate = now;
     }

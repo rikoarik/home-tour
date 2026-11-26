@@ -156,8 +156,17 @@ try {
   console.log('PER-LAMP CLICK TOGGLE:', lampOff.result?.value, '->', lampOn.result?.value);
   await sleep(1100);
   const desktopHighPerf = await send('Runtime.evaluate', { expression: 'JSON.stringify(window.__VILLA_APP__.getState())', returnByValue: true });
-  console.log('DESKTOP HIGH PERF (1440x900 + Half-Res GTAO):', desktopHighPerf.result?.value);
+  console.log('DESKTOP HIGH PERF (1440x900 + Half-Res GTAO + Baked AO):', desktopHighPerf.result?.value);
   await shot('09_programmer_studio_desktop.png');
+
+  // 5e. Level 2 Tempat Jemuran & Sky Service Deck (RM-12) + Level 2 Sky Lounge & Front Balcony (RM-13 / EXT-05)
+  await send('Runtime.evaluate', { expression: 'window.__VILLA_APP__.setTimeOfDay(14.0); window.__VILLA_APP__.teleportTo(1.25, 5.00, -10.85, 2.55, 4.30, -8.10);' });
+  await sleep(900);
+  await shot('10_l2_tempat_jemuran.png');
+
+  await send('Runtime.evaluate', { expression: 'window.__VILLA_APP__.teleportTo(6.95, 5.00, -9.85, 6.60, 4.45, -3.50);' });
+  await sleep(900);
+  await shot('11_l2_sky_lounge_balcony.png');
 
   // Benchmark Desktop Medium (Smooth 60 FPS direct render mode)
   await send('Runtime.evaluate', { expression: 'window.__VILLA_APP__.setQuality("medium")' });

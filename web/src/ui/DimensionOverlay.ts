@@ -3,6 +3,7 @@ import type { FloorplanSpec } from '../types';
 
 interface ProjectedBadge {
   id: string;
+  floor: 1 | 2;
   worldPos: THREE.Vector3;
   el: HTMLButtonElement;
 }
@@ -30,9 +31,11 @@ export class DimensionOverlay {
         onRoomClick(r.id);
       });
       this.container.appendChild(btn);
+      const fl: 1 | 2 = r.floor === 2 ? 2 : 1;
       this.badges.push({
         id: r.id,
-        worldPos: new THREE.Vector3(r.label_pos[0] / 1000, 0.35, -r.label_pos[1] / 1000),
+        floor: fl,
+        worldPos: new THREE.Vector3(r.label_pos[0] / 1000, fl === 2 ? 3.55 : 0.35, -r.label_pos[1] / 1000),
         el: btn,
       });
     }
@@ -49,9 +52,11 @@ export class DimensionOverlay {
       this.container.appendChild(btn);
       const cx = (z.bounds.x0 + z.bounds.x1) * 0.5 / 1000;
       const cy = (z.bounds.y0 + z.bounds.y1) * 0.5 / 1000;
+      const fl: 1 | 2 = z.floor === 2 ? 2 : 1;
       this.badges.push({
         id: z.id,
-        worldPos: new THREE.Vector3(cx, 0.2, -cy),
+        floor: fl,
+        worldPos: new THREE.Vector3(cx, fl === 2 ? 3.50 : 0.2, -cy),
         el: btn,
       });
     }
@@ -64,9 +69,19 @@ export class DimensionOverlay {
     this.container.hidden = !show;
   }
 
-  update(camera: THREE.Camera, width: number, height: number): void {
+  update(camera: THREE.Camera, width: number, height: number, floorFilter: 'all' | '1' | '2' = 'all'): void {
     if (!this.visible) return;
     for (const b of this.badges) {
+      if (floorFilter === '1' && b.floor !== 1) {
+        b.el.style.opacity = '0';
+        b.el.style.pointerEvents = 'none';
+        continue;
+      }
+      if (floorFilter === '2' && b.floor !== 2) {
+        b.el.style.opacity = '0';
+        b.el.style.pointerEvents = 'none';
+        continue;
+      }
       this.proj.copy(b.worldPos).project(camera);
       if (this.proj.z > 1 || this.proj.z < -1) {
         b.el.style.opacity = '0';

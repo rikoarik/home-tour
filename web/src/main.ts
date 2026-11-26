@@ -14,7 +14,7 @@ import { AmbientAudioEngine } from './engine/AmbientAudioEngine';
 import { PerformanceManager } from './engine/PerformanceManager';
 import { MiniMap } from './ui/MiniMap';
 import { DimensionOverlay } from './ui/DimensionOverlay';
-import type { CameraMode, FloorplanSpec, InteriorStyle, QualityLevel, SceneConfig } from './types';
+import type { CameraMode, FloorFilter, FloorplanSpec, InteriorStyle, QualityLevel, SceneConfig } from './types';
 
 function formatHour(hour: number): string {
   const h = Math.floor(hour) % 24;
@@ -84,12 +84,92 @@ async function bootstrap(): Promise<void> {
 
   const scene = new THREE.Scene();
 
-  // Grounded tropical residential context outside the 123.44 m² property (auto-hidden in Dollhouse/Floor Plan)
+  // Grounded photorealistic tropical residential neighborhood outside the 123.44 m² property (auto-hidden in Dollhouse/Floor Plan)
   const contextGroup = new THREE.Group();
   contextGroup.name = 'Context_Neighborhood';
+
+  // Synthesize organic tileable procedural canvas textures using seeded Mulberry32 PRNG (ZERO diagonal lattice stripes!)
+  const makeMicroCanvasTex = (
+    baseHex: string,
+    speckA: string,
+    speckB: string,
+    repeatX: number,
+    repeatY: number,
+    grid = 0,
+    seedInit = 1337
+  ): THREE.CanvasTexture => {
+    const c = document.createElement('canvas');
+    c.width = 256;
+    c.height = 256;
+    const g = c.getContext('2d')!;
+    g.fillStyle = baseHex;
+    g.fillRect(0, 0, 256, 256);
+    let s = seedInit >>> 0;
+    const rand = () => {
+      s = (s + 0x6d2b79f5) >>> 0;
+      let t = Math.imul(s ^ (s >>> 15), 1 | s);
+      t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+    // Soft large organic variation blotches (wrapped cleanly across edges)
+    for (let i = 0; i < 95; i++) {
+      const rx = rand() * 256;
+      const ry = rand() * 256;
+      const rad = 14 + rand() * 28;
+      g.fillStyle = i % 2 === 0 ? speckA : speckB;
+      g.globalAlpha = 0.055;
+      for (const ox of [-256, 0, 256]) {
+        for (const oy of [-256, 0, 256]) {
+          if (rx + ox + rad < 0 || rx + ox - rad > 256 || ry + oy + rad < 0 || ry + oy - rad > 256) continue;
+          g.beginPath();
+          g.arc(rx + ox, ry + oy, rad, 0, Math.PI * 2);
+          g.fill();
+        }
+      }
+    }
+    // Fine micro-mineral / grass-blade organic stipple
+    for (let i = 0; i < 3600; i++) {
+      g.fillStyle = i % 2 === 0 ? speckA : speckB;
+      g.globalAlpha = 0.11;
+      const sx = Math.floor(rand() * 256);
+      const sy = Math.floor(rand() * 256);
+      g.fillRect(sx, sy, 1 + Math.floor(rand() * 2), 1 + Math.floor(rand() * 2));
+    }
+    if (grid > 0) {
+      g.globalAlpha = 0.24;
+      g.strokeStyle = '#6c6860';
+      g.lineWidth = 2;
+      const step = 256 / grid;
+      for (let k = 0; k <= grid; k++) {
+        g.beginPath();
+        g.moveTo(k * step, 0);
+        g.lineTo(k * step, 256);
+        g.stroke();
+        g.beginPath();
+        g.moveTo(0, k * step);
+        g.lineTo(256, k * step);
+        g.stroke();
+      }
+    }
+    const t = new THREE.CanvasTexture(c);
+    t.colorSpace = THREE.SRGBColorSpace;
+    t.wrapS = THREE.RepeatWrapping;
+    t.wrapT = THREE.RepeatWrapping;
+    t.repeat.set(repeatX, repeatY);
+    t.anisotropy = 4;
+    return t;
+  };
+
+  const turfTex = makeMicroCanvasTex('#495e3a', '#354829', '#617a4c', 26, 26, 0, 101);
+  const sidewalkTex = makeMicroCanvasTex('#c4c0b7', '#9e9a91', '#ddd9d0', 18, 2, 2, 202);
+  const asphaltTex = makeMicroCanvasTex('#2c3037', '#202329', '#3d424b', 16, 4, 0, 303);
+  const stuccoCtxTex = makeMicroCanvasTex('#eae5dc', '#dad4c9', '#f5f2eb', 3, 2, 0, 404);
+  const darkStuccoTex = makeMicroCanvasTex('#393d44', '#2a2d33', '#4c515a', 2, 2, 0, 505);
+  const woodCtxTex = makeMicroCanvasTex('#6e4b32', '#523622', '#875f40', 2, 3, 0, 606);
+
   const horizonMesh = new THREE.Mesh(
     new THREE.PlaneGeometry(180, 180),
-    new THREE.MeshStandardMaterial({ color: 0x566948, roughness: 0.94, metalness: 0.0 })
+    new THREE.MeshStandardMaterial({ map: turfTex, roughness: 0.95, metalness: 0.0 })
   );
   horizonMesh.rotation.x = -Math.PI / 2;
   horizonMesh.position.set(4.57, -0.04, -6.75);
@@ -97,16 +177,14 @@ async function bootstrap(): Promise<void> {
   contextGroup.add(horizonMesh);
 
   // Concrete sidewalk & curb along South street frontage (Y_cad < 0 => Z > 0)
-  const sidewalkMesh = new THREE.Mesh(
-    new THREE.BoxGeometry(46, 0.08, 1.65),
-    new THREE.MeshStandardMaterial({ color: 0xbcb8af, roughness: 0.86 })
-  );
+  const sidewalkMat = new THREE.MeshStandardMaterial({ map: sidewalkTex, roughness: 0.86 });
+  const sidewalkMesh = new THREE.Mesh(new THREE.BoxGeometry(52, 0.08, 1.65), sidewalkMat);
   sidewalkMesh.position.set(4.57, -0.04, 0.825);
   sidewalkMesh.receiveShadow = true;
   contextGroup.add(sidewalkMesh);
 
   const curbMesh = new THREE.Mesh(
-    new THREE.BoxGeometry(46, 0.12, 0.16),
+    new THREE.BoxGeometry(52, 0.12, 0.16),
     new THREE.MeshStandardMaterial({ color: 0x99958d, roughness: 0.84 })
   );
   curbMesh.position.set(4.57, -0.04, 1.68);
@@ -114,93 +192,156 @@ async function bootstrap(): Promise<void> {
   contextGroup.add(curbMesh);
 
   const streetMesh = new THREE.Mesh(
-    new THREE.PlaneGeometry(46, 7.5),
-    new THREE.MeshStandardMaterial({ color: 0x26292f, roughness: 0.88 })
+    new THREE.PlaneGeometry(52, 7.5),
+    new THREE.MeshStandardMaterial({ map: asphaltTex, roughness: 0.88 })
   );
   streetMesh.rotation.x = -Math.PI / 2;
   streetMesh.position.set(4.57, -0.08, 5.5);
   streetMesh.receiveShadow = true;
   contextGroup.add(streetMesh);
 
-  // Neighboring modern architectural privacy volumes flanking left & right lots
-  const neighborMat = new THREE.MeshStandardMaterial({ color: 0xe6e2d9, roughness: 0.88 });
-  const neighborW = new THREE.Mesh(new THREE.BoxGeometry(7.2, 3.6, 10.2), neighborMat);
-  neighborW.position.set(-3.95, 1.76, -7.4);
-  neighborW.receiveShadow = true;
-  neighborW.castShadow = true;
-  contextGroup.add(neighborW);
+  // Photorealistic neighboring modern tropical villas (natural setbacks, warm interior-lit multi-pane glass, sunshades & teak louvers)
+  const neighborWallMat = new THREE.MeshStandardMaterial({ map: stuccoCtxTex, roughness: 0.90 });
+  const neighborDarkMat = new THREE.MeshStandardMaterial({ map: darkStuccoTex, roughness: 0.70, metalness: 0.25 });
+  const neighborGlassMat = new THREE.MeshStandardMaterial({
+    color: 0x5c7388,
+    roughness: 0.06,
+    metalness: 0.48,
+    transparent: true,
+    opacity: 0.68,
+    envMapIntensity: 1.55,
+  });
+  const neighborInteriorMat = new THREE.MeshStandardMaterial({ color: 0x9f927e, roughness: 0.90 });
+  const neighborWoodMat = new THREE.MeshStandardMaterial({ map: woodCtxTex, roughness: 0.62 });
 
-  const neighborE = new THREE.Mesh(new THREE.BoxGeometry(7.2, 3.6, 10.2), neighborMat);
-  neighborE.position.set(13.1, 1.76, -7.4);
-  neighborE.receiveShadow = true;
-  neighborE.castShadow = true;
-  contextGroup.add(neighborE);
+  const addArchitecturalNeighbor = (cx: number, cz: number, w: number, h: number, d: number, faceSouth: boolean) => {
+    const dir = faceSouth ? 1 : -1;
+    const body = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), neighborWallMat);
+    body.position.set(cx, h * 0.5 - 0.02, cz);
+    body.receiveShadow = true;
+    body.castShadow = true;
+    contextGroup.add(body);
+    // Overhanging architectural roof slab + dark fascia
+    const fascia = new THREE.Mesh(new THREE.BoxGeometry(w + 0.45, 0.26, d + 0.45), neighborDarkMat);
+    fascia.position.set(cx, h + 0.10, cz);
+    fascia.castShadow = true;
+    contextGroup.add(fascia);
+    // Mid-level horizontal concrete canopy overhang between L1 and L2
+    const midBand = new THREE.Mesh(new THREE.BoxGeometry(w + 0.30, 0.16, d + 0.30), neighborDarkMat);
+    midBand.position.set(cx, 3.22, cz);
+    midBand.castShadow = true;
+    contextGroup.add(midBand);
+    // Recessed multi-pane architectural windows with interior curtain backing, mullions & slim sunhoods
+    const fz = cz + dir * (d * 0.5);
+    for (const wy of [1.65, 4.45]) {
+      if (wy + 0.85 > h) continue;
+      const wx = cx - w * 0.15;
+      // Warm interior room backing so glass never looks like a flat black sticker!
+      const back = new THREE.Mesh(new THREE.BoxGeometry(2.42, 1.38, 0.04), neighborInteriorMat);
+      back.position.set(wx, wy, fz + dir * 0.015);
+      contextGroup.add(back);
+      // Reflective sky-tinted architectural window glass
+      const pane = new THREE.Mesh(new THREE.BoxGeometry(2.46, 1.42, 0.03), neighborGlassMat);
+      pane.position.set(wx, wy, fz + dir * 0.055);
+      contextGroup.add(pane);
+      // Crisp 4-sided perimeter aluminum frame + 2 vertical mullions
+      const topBar = new THREE.Mesh(new THREE.BoxGeometry(2.62, 0.09, 0.14), neighborDarkMat);
+      topBar.position.set(wx, wy + 0.72, fz + dir * 0.06);
+      contextGroup.add(topBar);
+      const botBar = new THREE.Mesh(new THREE.BoxGeometry(2.62, 0.09, 0.14), neighborDarkMat);
+      botBar.position.set(wx, wy - 0.72, fz + dir * 0.06);
+      contextGroup.add(botBar);
+      for (const mx of [-1.26, -0.42, 0.42, 1.26]) {
+        const mull = new THREE.Mesh(new THREE.BoxGeometry(0.06, 1.44, 0.10), neighborDarkMat);
+        mull.position.set(wx + mx, wy, fz + dir * 0.06);
+        contextGroup.add(mull);
+      }
+      // Subtle concrete rain hood above each window
+      const hood = new THREE.Mesh(new THREE.BoxGeometry(2.74, 0.08, 0.36), neighborWallMat);
+      hood.position.set(wx, wy + 0.80, fz + dir * 0.18);
+      hood.castShadow = true;
+      contextGroup.add(hood);
+    }
+    // Vertical teak timber slat screen accent
+    for (let sl = 0; sl < 7; sl++) {
+      const slat = new THREE.Mesh(new THREE.BoxGeometry(0.08, h * 0.82, 0.14), neighborWoodMat);
+      slat.position.set(cx + w * 0.18 + sl * 0.18, h * 0.44, fz + dir * 0.07);
+      slat.castShadow = true;
+      contextGroup.add(slat);
+    }
+  };
 
-  // Opposite-side luxury residential garden wall, villa & tropical street trees visible through Programmer Studio Window W2
-  const oppSidewalk = new THREE.Mesh(
-    new THREE.BoxGeometry(46, 0.08, 1.35),
-    new THREE.MeshStandardMaterial({ color: 0xbcb8af, roughness: 0.88 })
-  );
+  // Realistic 3.0m landscaped side setbacks so neighboring luxury villas frame Villa Aurelia naturally without crowding it!
+  addArchitecturalNeighbor(-6.4, -7.8, 7.6, 5.8, 10.2, true);
+  addArchitecturalNeighbor(15.6, -7.8, 7.6, 5.8, 10.2, true);
+
+  // Opposite-side luxury residential garden wall with teak slats, modern 2-story villa & lush botanical trees (seen through Studio W2 & L2 Balcony!)
+  const oppSidewalk = new THREE.Mesh(new THREE.BoxGeometry(52, 0.08, 1.35), sidewalkMat);
   oppSidewalk.position.set(4.57, -0.04, 9.15);
   oppSidewalk.receiveShadow = true;
   contextGroup.add(oppSidewalk);
 
-  const oppWall = new THREE.Mesh(
-    new THREE.BoxGeometry(30, 1.85, 0.28),
-    new THREE.MeshStandardMaterial({ color: 0xded9cf, roughness: 0.92 })
-  );
+  const oppWall = new THREE.Mesh(new THREE.BoxGeometry(34, 1.85, 0.28), neighborWallMat);
   oppWall.position.set(4.57, 0.92, 9.95);
   oppWall.receiveShadow = true;
   oppWall.castShadow = true;
   contextGroup.add(oppWall);
 
-  const oppWallCap = new THREE.Mesh(
-    new THREE.BoxGeometry(30.1, 0.08, 0.34),
-    new THREE.MeshStandardMaterial({ color: 0x2a2d33, roughness: 0.65 })
-  );
+  const oppWallCap = new THREE.Mesh(new THREE.BoxGeometry(34.1, 0.08, 0.34), neighborDarkMat);
   oppWallCap.position.set(4.57, 1.88, 9.95);
   contextGroup.add(oppWallCap);
+  // Warm teak accent pilasters along opposite garden wall for architectural continuity
+  for (const px of [-2.0, 2.2, 6.4, 10.6]) {
+    const pil = new THREE.Mesh(new THREE.BoxGeometry(0.55, 1.82, 0.32), neighborWoodMat);
+    pil.position.set(px, 0.91, 9.93);
+    contextGroup.add(pil);
+  }
 
-  const oppVilla = new THREE.Mesh(new THREE.BoxGeometry(11.5, 3.7, 5.2), neighborMat);
-  oppVilla.position.set(7.2, 1.85, 13.0);
-  oppVilla.receiveShadow = true;
-  oppVilla.castShadow = true;
-  contextGroup.add(oppVilla);
+  addArchitecturalNeighbor(7.8, 14.4, 11.4, 6.2, 5.4, false);
+  addArchitecturalNeighbor(-4.6, 14.6, 8.6, 5.6, 5.2, false);
 
-  // Organic branching tropical street trees along opposite garden wall — GPU-instanced (5 draw calls instead of 228!)
-  const trunkMat = new THREE.MeshStandardMaterial({ color: 0x4b3b2c, roughness: 0.94 });
-  const leafMats = [
-    new THREE.MeshStandardMaterial({ color: 0x385328, roughness: 0.80, side: THREE.DoubleSide }),
-    new THREE.MeshStandardMaterial({ color: 0x4b6a34, roughness: 0.78, side: THREE.DoubleSide }),
-    new THREE.MeshStandardMaterial({ color: 0x617f42, roughness: 0.78, side: THREE.DoubleSide }),
-  ];
+  // Lush Botanical Tropical Street Trees using high-detail alpha-cutout multi-leaf spray sprites!
+  const trunkMat = new THREE.MeshStandardMaterial({ color: 0x453526, roughness: 0.94 });
+  const foliageB64 = window.__EMBEDDED_ASSETS__?.['foliage_branch_rgba.webp'];
+  const foliageUrl = foliageB64 ? `data:image/webp;base64,${foliageB64}` : './assets/foliage_branch_rgba.webp';
+  const foliageTex = new THREE.TextureLoader().load(foliageUrl);
+  foliageTex.colorSpace = THREE.SRGBColorSpace;
+  const foliageMat = new THREE.MeshStandardMaterial({
+    map: foliageTex,
+    alphaTest: 0.45,
+    roughness: 0.78,
+    metalness: 0.0,
+    side: THREE.DoubleSide,
+  });
   const treeSpecs: Array<[number, number, number, number]> = [
-    [5.6, 9.25, 3.6, 1],
-    [9.3, 9.35, 4.0, 2],
-    [1.6, 9.3, 3.5, 3],
+    [5.8, 9.30, 4.1, 1],
+    [9.4, 9.40, 4.5, 2],
+    [1.4, 9.35, 3.8, 3],
+    [-1.4, -0.6, 4.2, 4],
+    [10.9, -0.8, 4.4, 5],
   ];
-  const trunkInst = new THREE.InstancedMesh(new THREE.CylinderGeometry(0.045, 0.09, 1.0, 7), trunkMat, treeSpecs.length);
+  const trunkInst = new THREE.InstancedMesh(new THREE.CylinderGeometry(0.052, 0.105, 1.0, 8), trunkMat, treeSpecs.length);
   trunkInst.castShadow = true;
-  const limbInst = new THREE.InstancedMesh(new THREE.CylinderGeometry(0.014, 0.036, 1.0, 5), trunkMat, treeSpecs.length * 5);
-  const leafBladeGeo = new THREE.PlaneGeometry(0.24, 0.42);
-  const leafMatrices: THREE.Matrix4[][] = [[], [], []];
+  const limbInst = new THREE.InstancedMesh(new THREE.CylinderGeometry(0.014, 0.040, 1.0, 6), trunkMat, treeSpecs.length * 6);
+  const branchCardGeo = new THREE.PlaneGeometry(1.15, 1.15);
+  const branchMatrices: THREE.Matrix4[] = [];
   const dummy = new THREE.Object3D();
 
   let tIdx = 0;
   let lIdx = 0;
   for (const [tx, tz, th, seed] of treeSpecs) {
-    dummy.position.set(tx, th * 0.26, tz);
+    dummy.position.set(tx, th * 0.27, tz);
     dummy.rotation.set(0, 0, 0);
-    dummy.scale.set(1, th * 0.52, 1);
+    dummy.scale.set(1, th * 0.54, 1);
     dummy.updateMatrix();
     trunkInst.setMatrixAt(tIdx++, dummy.matrix);
 
-    for (let b = 0; b < 5; b++) {
-      const ang = (b * Math.PI * 2) / 5 + seed * 0.7;
-      const limbLen = 0.95 + (b % 2) * 0.35;
+    for (let b = 0; b < 6; b++) {
+      const ang = (b * Math.PI * 2) / 6 + seed * 0.63;
+      const limbLen = 1.05 + (b % 3) * 0.26;
       dummy.position.set(
         tx + Math.cos(ang) * limbLen * 0.36,
-        th * 0.50 + limbLen * 0.38,
+        th * 0.48 + limbLen * 0.36,
         tz + Math.sin(ang) * limbLen * 0.36
       );
       dummy.rotation.set(Math.sin(ang) * 0.55, 0, -Math.cos(ang) * 0.55);
@@ -208,34 +349,33 @@ async function bootstrap(): Promise<void> {
       dummy.updateMatrix();
       limbInst.setMatrixAt(lIdx++, dummy.matrix);
 
-      const tipX = tx + Math.cos(ang) * limbLen * 0.72;
-      const tipY = th * 0.50 + limbLen * 0.72;
-      const tipZ = tz + Math.sin(ang) * limbLen * 0.72;
-      for (let lf = 0; lf < 14; lf++) {
-        const a2 = lf * 2.39996 + seed;
-        const r2 = 0.14 + (lf % 4) * 0.13;
+      const tipX = tx + Math.cos(ang) * limbLen * 0.68;
+      const tipY = th * 0.48 + limbLen * 0.68;
+      const tipZ = tz + Math.sin(ang) * limbLen * 0.68;
+      // 9 multi-angle dense botanical leaf-branch sprays per limb for rich, airy natural silhouettes
+      for (let lf = 0; lf < 9; lf++) {
+        const a2 = lf * 2.39996 + seed + b;
+        const r2 = 0.12 + (lf % 4) * 0.20;
+        const sc = 0.80 + (lf % 3) * 0.26;
         dummy.position.set(
           tipX + Math.cos(a2) * r2,
-          tipY + ((lf % 5) - 2) * 0.11,
+          tipY + ((lf % 4) - 1.5) * 0.20,
           tipZ + Math.sin(a2) * r2
         );
-        dummy.rotation.set((lf % 3) * 0.5 - 0.5, a2, ((lf + b) % 4) * 0.4 - 0.6);
-        dummy.scale.set(1, 1, 1);
+        dummy.rotation.set((lf % 3) * 0.50 - 0.50, a2, ((lf + b) % 4) * 0.40 - 0.55);
+        dummy.scale.set(sc, sc, sc);
         dummy.updateMatrix();
-        leafMatrices[(lf + b) % leafMats.length].push(dummy.matrix.clone());
+        branchMatrices.push(dummy.matrix.clone());
       }
     }
   }
   trunkInst.instanceMatrix.needsUpdate = true;
   limbInst.instanceMatrix.needsUpdate = true;
   contextGroup.add(trunkInst, limbInst);
-  for (let m = 0; m < leafMats.length; m++) {
-    const mats = leafMatrices[m];
-    const leafInst = new THREE.InstancedMesh(leafBladeGeo, leafMats[m], mats.length);
-    for (let i = 0; i < mats.length; i++) leafInst.setMatrixAt(i, mats[i]);
-    leafInst.instanceMatrix.needsUpdate = true;
-    contextGroup.add(leafInst);
-  }
+  const foliageInst = new THREE.InstancedMesh(branchCardGeo, foliageMat, branchMatrices.length);
+  for (let i = 0; i < branchMatrices.length; i++) foliageInst.setMatrixAt(i, branchMatrices[i]);
+  foliageInst.instanceMatrix.needsUpdate = true;
+  contextGroup.add(foliageInst);
   // Freeze static neighborhood matrices so Three.js skips redundant CPU matrix recalculations every frame
   contextGroup.traverse((obj) => {
     if (obj !== contextGroup) {
@@ -299,9 +439,11 @@ async function bootstrap(): Promise<void> {
       floorplan,
       arch.roofObjects,
       arch.ceilingObjects,
+      arch.level2Objects,
       (mode) => syncCameraModeUI(mode)
     );
     camCtrl.setCollisionBoxes(collisionBoxes);
+    camCtrl.setActiveStyleGroup(activeStyleGroup);
 
     const interaction = new InteractionSystem(scene, arch, sceneConfig, floorplan);
     interaction.registerStyleCurtains(activeStyleGroup);
@@ -380,11 +522,18 @@ async function bootstrap(): Promise<void> {
       roomListEl.appendChild(b);
     }
 
-    // Sync UI for Camera Mode changes
+    // Sync UI for Camera Mode & Floor Filter changes
+    const syncFloorFilterUI = (filter: FloorFilter) => {
+      document.querySelectorAll<HTMLButtonElement>('[data-floor]').forEach((btn) => {
+        btn.classList.toggle('is-active', btn.dataset.floor === filter);
+      });
+    };
+
     const syncCameraModeUI = (mode: CameraMode) => {
       document.querySelectorAll<HTMLButtonElement>('[data-cam]').forEach((btn) => {
         btn.classList.toggle('is-active', btn.dataset.cam === mode);
       });
+      syncFloorFilterUI(camCtrl.floorFilter);
       el('btn-roof').classList.toggle('is-active', camCtrl.isRoofVisible());
       const showContext = mode === 'exterior' || mode === 'firstperson';
       contextGroup.visible = showContext;
@@ -398,6 +547,22 @@ async function bootstrap(): Promise<void> {
       el('mobile-joystick').hidden = !(mode === 'firstperson' && isTouchOrNarrow);
       el('wasd-door-hud').hidden = mode !== 'firstperson';
     };
+
+    document.querySelectorAll<HTMLButtonElement>('[data-floor]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const f = (btn.dataset.floor || 'all') as FloorFilter;
+        camCtrl.setFloorFilter(f);
+        syncFloorFilterUI(f);
+        markShadowsDirty();
+        showToast(
+          f === '1'
+            ? 'Viewing Lantai 1 (Ground Floor Cutaway)'
+            : f === '2'
+              ? 'Viewing Lantai 2 (Tempat Jemuran & Sky Lounge)'
+              : 'Viewing Full 2-Story Residence (All Floors)'
+        );
+      });
+    });
 
     let manualDimsOn = false;
 
@@ -447,6 +612,7 @@ async function bootstrap(): Promise<void> {
         nextGroup.visible = true;
         activeStyleGroup = nextGroup;
         activeStyle = nextStyle;
+        camCtrl.setActiveStyleGroup(nextGroup);
         interaction.activeStyle = nextStyle;
         interaction.registerStyleCurtains(nextGroup);
         lighting.bindSceneLightMeshes(nextGroup);
@@ -511,7 +677,7 @@ async function bootstrap(): Promise<void> {
       const open = interaction.toggleAllDoors();
       el('btn-doors').classList.toggle('is-active', open);
       el('btn-wasd-all-doors').classList.toggle('is-active', open);
-      showToast(open ? 'All 8 interactive doors opened' : 'All 8 interactive doors closed');
+      showToast(open ? 'All 10 interactive doors opened' : 'All 10 interactive doors closed');
     });
 
     const triggerNearestOrAllDoors = () => {
@@ -524,7 +690,7 @@ async function bootstrap(): Promise<void> {
         const open = interaction.toggleAllDoors();
         el('btn-doors').classList.toggle('is-active', open);
         el('btn-wasd-all-doors').classList.toggle('is-active', open);
-        showToast(open ? 'All 8 interactive doors opened' : 'All 8 interactive doors closed');
+        showToast(open ? 'All 10 interactive doors opened' : 'All 10 interactive doors closed');
       }
     };
 
@@ -533,7 +699,7 @@ async function bootstrap(): Promise<void> {
       const open = interaction.toggleAllDoors();
       el('btn-doors').classList.toggle('is-active', open);
       el('btn-wasd-all-doors').classList.toggle('is-active', open);
-      showToast(open ? 'All 8 interactive doors opened' : 'All 8 interactive doors closed');
+      showToast(open ? 'All 10 interactive doors opened' : 'All 10 interactive doors closed');
     });
 
     // Keyboard shortcuts for WASD Walkthrough door & curtain interaction ([E]/[F]: Nearest Door, [O]: All Doors, [C]: Curtains)
@@ -761,8 +927,13 @@ async function bootstrap(): Promise<void> {
     joyZone.addEventListener('pointerup', resetJoy);
     joyZone.addEventListener('pointercancel', resetJoy);
 
-    // Architectural Post-Processing Pipeline: RenderPass -> Scaled GTAOPass (Contact AO) -> Half-Res Fixture Bloom -> ACES OutputPass
-    const composer = new EffectComposer(renderer);
+    // Architectural Post-Processing Pipeline: 4x Hardware MSAA RenderTarget -> Scaled GTAOPass -> Half-Res Fixture Bloom -> ACES OutputPass
+    // Hardware WebGL2 MSAA eliminates all staircase jagged aliasing on thin pergola slats, louvers & window mullions!
+    const msaaRT = new THREE.WebGLRenderTarget(window.innerWidth, window.innerHeight, {
+      type: THREE.HalfFloatType,
+      samples: 4,
+    });
+    const composer = new EffectComposer(renderer, msaaRT);
     const renderPass = new RenderPass(scene, camCtrl.activeCamera);
     const initGtaoScale = Math.max(0.35, perf.getPreset().gtaoScale || 0.55);
     const gtaoPass = new GTAOPass(
@@ -833,6 +1004,11 @@ async function bootstrap(): Promise<void> {
     // Expose safe runtime inspection hook for automated verification
     (window as unknown as Record<string, unknown>).__VILLA_APP__ = {
       setMode: (m: CameraMode) => camCtrl.setMode(m, true),
+      setFloorFilter: (f: FloorFilter) => {
+        camCtrl.setFloorFilter(f);
+        syncFloorFilterUI(f);
+        markShadowsDirty();
+      },
       switchStyle,
       setTimeOfDay: (h: number) => applyHourUI(h, true),
       setQuality: (q: QualityLevel) => {
@@ -882,6 +1058,7 @@ async function bootstrap(): Promise<void> {
     let lastMiniY = Number.NaN;
     let lastMiniH = Number.NaN;
     let lastMiniRoom: string | null = '__init__';
+    let lastMiniFloor: 1 | 2 = 1;
 
     const animate = (now: number) => {
       requestAnimationFrame(animate);
@@ -903,7 +1080,7 @@ async function bootstrap(): Promise<void> {
       if (camCtrl.mode === 'firstperson') {
         const nextHudText = nearbyDoor
           ? `Door ${nearbyDoor.id} (${nearbyDoor.label}) — ${nearbyDoor.isOpen ? 'OPEN' : 'CLOSED'} (${nearbyDoor.dist.toFixed(1)}m)`
-          : 'WASD: Walk · Shift: Run · Auto-Open Doors Active · [E] Nearest Door · [O] All 8 Doors';
+          : 'WASD: Walk & Climb Stairs · Shift: Run · Auto-Open Doors · [E] Nearest Door · [O] All 10 Doors';
         const nextBtnText = nearbyDoor
           ? `${nearbyDoor.isOpen ? 'Close' : 'Open'} ${nearbyDoor.id} [E]`
           : 'Nearest Door [E]';
@@ -916,20 +1093,34 @@ async function bootstrap(): Promise<void> {
       }
 
       const planState = camCtrl.getCameraPlanState();
-      const curRoomId = interaction.resolveRoomIdAtPoint(planState.x, planState.yCad);
+      const activeFloor: 1 | 2 =
+        camCtrl.floorFilter === '2'
+          ? 2
+          : camCtrl.floorFilter === '1'
+            ? 1
+            : camCtrl.activeCamera.position.y >= 2.85 && camCtrl.mode === 'firstperson'
+              ? 2
+              : 1;
+      const curRoomId = interaction.resolveRoomIdAtPoint(
+        planState.x,
+        planState.yCad,
+        activeFloor === 2 ? 4.8 : 1.6
+      );
       if (
         Math.abs(planState.x - lastMiniX) > 0.015 ||
         Math.abs(planState.yCad - lastMiniY) > 0.015 ||
         Math.abs(planState.headingRad - lastMiniH) > 0.01 ||
-        curRoomId !== lastMiniRoom
+        curRoomId !== lastMiniRoom ||
+        activeFloor !== lastMiniFloor
       ) {
-        miniMap.render(planState.x, planState.yCad, planState.headingRad, curRoomId);
+        miniMap.render(planState.x, planState.yCad, planState.headingRad, curRoomId, activeFloor);
         lastMiniX = planState.x;
         lastMiniY = planState.yCad;
         lastMiniH = planState.headingRad;
         lastMiniRoom = curRoomId;
+        lastMiniFloor = activeFloor;
       }
-      dimOverlay.update(camCtrl.activeCamera, window.innerWidth, window.innerHeight);
+      dimOverlay.update(camCtrl.activeCamera, window.innerWidth, window.innerHeight, camCtrl.floorFilter);
 
       lighting.updatePooledLights(camCtrl.activeCamera.position, camCtrl.mode);
 
