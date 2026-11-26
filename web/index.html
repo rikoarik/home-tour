@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <title>Villa Aurelia 123 — Interactive 3D Luxury Residence</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%230b0f17'/><path d='M6 17L16 8l10 9v9h-7v-6h-6v6H6z' fill='%23d4af76'/></svg>" />
+    <link rel="stylesheet" href="./src/styles/main.css" />
+  </head>
+  <body>
+    <main id="viewport" aria-label="Interactive 3D Architectural Viewer">
+      <canvas id="scene-canvas"></canvas>
+      <div id="dimension-overlay" hidden></div>
+    </main>
+
+    <!-- CINEMATIC WELCOME OVERLAY -->
+    <section id="welcome-overlay" aria-label="Property Welcome">
+      <div class="welcome-card">
+        <p class="welcome-eyebrow" id="welcome-badge">Private Collection · Ready to Explore</p>
+        <h1 class="welcome-title" id="welcome-title">Villa Aurelia 123</h1>
+        <p class="welcome-sub" id="welcome-tagline">Modern Tropical Single-Story Luxury Residence</p>
+
+        <div class="welcome-price-row">
+          <span id="welcome-address">Editable Site Address</span>
+          <span class="welcome-price" id="welcome-price">Editable Asking Price</span>
+        </div>
+
+        <div class="welcome-metrics">
+          <div class="metric-box">
+            <span class="metric-box__val">123.44 m²</span>
+            <span class="metric-box__lbl">Land Area</span>
+          </div>
+          <div class="metric-box">
+            <span class="metric-box__val">80.17 m²</span>
+            <span class="metric-box__lbl">Building Footprint</span>
+          </div>
+          <div class="metric-box">
+            <span class="metric-box__val">69.43 m²</span>
+            <span class="metric-box__lbl">Usable Interior</span>
+          </div>
+          <div class="metric-box">
+            <span class="metric-box__val">2 Bed · 1 Studio</span>
+            <span class="metric-box__lbl">2 Bath · 1 Carport</span>
+          </div>
+        </div>
+
+        <div class="welcome-progress" id="welcome-progress">
+          <div class="progress-track">
+            <div class="progress-fill" id="progress-fill"></div>
+          </div>
+          <div class="progress-label">
+            <span id="progress-status">Validating Blender GLB assets…</span>
+            <span id="progress-pct">0%</span>
+          </div>
+        </div>
+
+        <div class="welcome-actions">
+          <button type="button" class="btn btn--primary" id="btn-start-exploring" disabled>
+            Start Exploring
+          </button>
+          <button type="button" class="btn btn--secondary" id="btn-start-tour" disabled>
+            Start Guided Tour
+          </button>
+          <button type="button" class="btn btn--ghost" id="btn-welcome-contact">
+            Contact Agent
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- MINIMALIST TOP BAR -->
+    <header class="top-bar">
+      <div class="brand-pill glass">
+        <button type="button" class="icon-btn" id="btn-toggle-panel" aria-expanded="true" title="Toggle Property Navigator">
+          ☰
+        </button>
+        <div>
+          <div class="brand-title">Villa Aurelia 123</div>
+          <div class="brand-meta">123.44 m² Plot · 80.17 m² Footprint · 2 Bed + Programmer Studio</div>
+        </div>
+      </div>
+
+      <nav class="tool-strip glass" aria-label="Property Interactive Controls">
+        <button type="button" class="icon-btn" id="btn-doors" title="Open or close all doors">Doors</button>
+        <button type="button" class="icon-btn" id="btn-curtains" title="Open or close sheer curtains">Curtains</button>
+        <button type="button" class="icon-btn" id="btn-lights" title="Toggle interior room lighting">Lights</button>
+        <button type="button" class="icon-btn" id="btn-roof" title="Toggle roof and ceiling visibility">Roof</button>
+        <button type="button" class="icon-btn" id="btn-dims" title="Show or hide room dimensions">Dims</button>
+        <button type="button" class="icon-btn" id="btn-measure" title="Measure 3D distance between two points">Measure</button>
+        <button type="button" class="icon-btn" id="btn-audio" title="Toggle ambient soundtrack">Sound Off</button>
+        <button type="button" class="icon-btn hide-mobile" id="btn-reset" title="Reset camera view">Reset</button>
+        <button type="button" class="icon-btn" id="btn-settings" title="Graphics & audio settings">Settings</button>
+        <button type="button" class="icon-btn hide-mobile" id="btn-fullscreen" title="Toggle fullscreen">Fullscreen</button>
+        <button type="button" class="icon-btn" id="btn-contact" title="Contact property advisor">Contact</button>
+        <span class="fps-badge hide-mobile" id="fps-badge" aria-live="off">60 FPS</span>
+      </nav>
+    </header>
+
+    <!-- LEFT NAVIGATOR & LIVE MINI-MAP -->
+    <aside class="side-panel glass" id="side-panel" aria-label="Property Navigator and Mini-Map">
+      <div>
+        <h2 class="panel-heading">Live Architectural Mini-Map</h2>
+        <div class="minimap-wrap">
+          <canvas id="minimap-canvas" width="234" height="320" aria-label="Interactive floor plan mini-map"></canvas>
+        </div>
+      </div>
+
+      <div>
+        <h2 class="panel-heading">Room Navigator (Click to Enter)</h2>
+        <div class="room-list" id="room-list"></div>
+      </div>
+
+      <div>
+        <h2 class="panel-heading">Property Specs</h2>
+        <div style="font-size: 0.76rem; color: var(--text-muted); line-height: 1.55;">
+          <div>Site: 9.144 × 13.500 m (45.29 m perim.)</div>
+          <div>Walls: 200 mm Ext · 120 mm Int</div>
+          <div>Ceiling: 3,000 mm (Wet areas 2,800 mm)</div>
+          <div>Tip: Click doors to open, click furniture to inspect.</div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- MEASURE TOOL PILL -->
+    <div class="measure-pill glass" id="measure-hud" hidden>
+      <span id="measure-text">Click first point in 3D space to measure</span>
+      <button type="button" class="pill-btn" id="btn-measure-clear">Clear</button>
+    </div>
+
+    <!-- CINEMATIC GUIDED TOUR CARD -->
+    <section class="tour-card glass" id="tour-card" aria-label="Guided Architectural Tour" hidden>
+      <div class="tour-card__step" id="tour-step">Stop 1 of 10</div>
+      <h2 class="tour-card__title" id="tour-room-name">Street Approach</h2>
+      <div class="tour-card__area" id="tour-room-area">11.59 m² · 124.75 sq ft</div>
+      <p class="tour-card__copy" id="tour-feature"></p>
+      <p class="tour-card__selling" id="tour-selling"></p>
+      <div class="tour-controls">
+        <button type="button" class="pill-btn is-active" id="btn-tour-playpause">Pause</button>
+        <button type="button" class="pill-btn" id="btn-tour-prev">Prev</button>
+        <button type="button" class="pill-btn" id="btn-tour-next">Skip</button>
+        <button type="button" class="pill-btn" id="btn-tour-restart">Restart</button>
+        <button type="button" class="pill-btn" id="btn-tour-exit">Exit</button>
+      </div>
+    </section>
+
+    <!-- FURNITURE & MATERIAL INSPECTOR -->
+    <section class="floating-card glass" id="inspector-card" aria-label="Material and Furniture Inspector" hidden>
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+        <span class="panel-heading" id="insp-category" style="margin:0;">Curated Furnishing</span>
+        <button type="button" class="icon-btn" id="btn-insp-close" aria-label="Close inspector" style="padding:2px 8px;">✕</button>
+      </div>
+      <h3 id="insp-title" style="margin:0 0 8px; font-family:var(--font-serif); font-size:1.3rem;"></h3>
+      <div style="font-size:0.78rem; color:var(--text-muted); display:grid; gap:4px;">
+        <div><strong>Room:</strong> <span id="insp-room"></span></div>
+        <div><strong>Dimensions:</strong> <span id="insp-dims" style="font-family:var(--font-mono);"></span></div>
+        <div><strong>Material:</strong> <span id="insp-mat"></span></div>
+        <div><strong>Style:</strong> <span id="insp-style"></span></div>
+        <div id="insp-notes" style="color:var(--accent-gold); margin-top:4px;"></div>
+      </div>
+    </section>
+
+    <!-- MOBILE VIRTUAL JOYSTICK (First-Person) -->
+    <div class="joystick-zone" id="mobile-joystick" aria-label="Virtual Movement Joystick" hidden>
+      <div class="joystick-knob" id="joystick-knob"></div>
+    </div>
+
+    <!-- WASD WALKTHROUGH & DOOR PROXIMITY HUD -->
+    <div class="wasd-door-hud glass" id="wasd-door-hud" hidden>
+      <span id="wasd-door-text">WASD: Move · [E] Open/Close Nearest Door · [O] All Doors (Auto-Open ON)</span>
+      <button type="button" class="pill-btn is-active" id="btn-wasd-near-door">Toggle Door [E]</button>
+      <button type="button" class="pill-btn" id="btn-wasd-all-doors">All Doors [O]</button>
+    </div>
+
+    <!-- TOAST FEEDBACK -->
+    <div class="toast glass" id="toast" role="status" aria-live="polite"></div>
+
+    <!-- FLOATING BOTTOM DOCK -->
+    <footer class="bottom-dock glass" aria-label="Camera, Style, and Lighting Controls">
+      <div class="dock-group" role="group" aria-label="Camera Mode">
+        <button type="button" class="pill-btn is-active" data-cam="exterior">Exterior</button>
+        <button type="button" class="pill-btn" data-cam="dollhouse">Dollhouse</button>
+        <button type="button" class="pill-btn" data-cam="floorplan">Floor Plan</button>
+        <button type="button" class="pill-btn" data-cam="firstperson">Walkthrough</button>
+      </div>
+
+      <div class="dock-group" role="group" aria-label="Interior Design Style">
+        <button type="button" class="pill-btn is-active" data-style="warm_luxury">Warm Luxury</button>
+        <button type="button" class="pill-btn" data-style="scandinavian">Scandinavian</button>
+        <button type="button" class="pill-btn" data-style="modern">Modern</button>
+      </div>
+
+      <div class="dock-group tod-control">
+        <label for="tod-slider" class="tod-readout" id="tod-readout">14:30 · Afternoon</label>
+        <input
+          type="range"
+          id="tod-slider"
+          class="studio-slider"
+          min="6"
+          max="24"
+          step="0.25"
+          value="14.5"
+          aria-label="Time of day from 06:00 to 24:00"
+          aria-valuetext="14:30 Bright Afternoon"
+        />
+      </div>
+
+      <div class="dock-group">
+        <button type="button" class="pill-btn" id="btn-dock-tour">Guided Tour</button>
+      </div>
+    </footer>
+
+    <!-- SETTINGS MODAL DIALOG -->
+    <dialog id="settings-dialog" class="studio-dialog" closedby="any" aria-labelledby="settings-title">
+      <h1 id="settings-title">Experience Settings</h1>
+
+      <div class="form-field">
+        <label for="quality-select">Graphics Quality Preset</label>
+        <select id="quality-select" autofocus>
+          <option value="low">Low — Mobile Battery Saver (512px shadows off, 1x DPR)</option>
+          <option value="medium">Medium — Balanced Laptop & Mobile (1024px shadows)</option>
+          <option value="high" selected>High — Recommended Desktop (2048px soft shadows)</option>
+          <option value="ultra">Ultra — Full Retina Architectural Showcase</option>
+        </select>
+      </div>
+
+      <div class="form-field">
+        <label for="audio-volume">Ambient Music Volume (<span id="audio-vol-label">28%</span>)</label>
+        <input
+          type="range"
+          id="audio-volume"
+          class="studio-slider"
+          style="inline-size: 100%;"
+          min="0"
+          max="1"
+          step="0.02"
+          value="0.28"
+          aria-valuetext="28 percent"
+        />
+      </div>
+
+      <div class="form-field">
+        <label>Quick Time-of-Day Presets</label>
+        <div style="display:flex; flex-wrap:wrap; gap:6px;">
+          <button type="button" class="pill-btn" data-tod="8.5">Morning 08:30</button>
+          <button type="button" class="pill-btn" data-tod="14.5">Afternoon 14:30</button>
+          <button type="button" class="pill-btn" data-tod="17.75">Sunset 17:45</button>
+          <button type="button" class="pill-btn" data-tod="18.9">Blue Hour 18:55</button>
+          <button type="button" class="pill-btn" data-tod="21.0">Night 21:00</button>
+        </div>
+      </div>
+
+      <form method="dialog" class="dialog-actions">
+        <button type="submit" value="close" class="btn btn--primary">Done</button>
+      </form>
+    </dialog>
+
+    <!-- CONTACT AGENT MODAL DIALOG -->
+    <dialog id="contact-dialog" class="studio-dialog" closedby="any" aria-labelledby="contact-title">
+      <h1 id="contact-title">Private Viewing Inquiry</h1>
+      <p style="font-size:0.84rem; color:var(--text-muted); margin:0 0 16px;" id="contact-agent-card"></p>
+      <form id="contact-form">
+        <div class="form-field">
+          <label for="lead-name">Full Name</label>
+          <input id="lead-name" name="name" type="text" required placeholder="Alex Morgan" autofocus />
+        </div>
+        <div class="form-field">
+          <label for="lead-email">Email Address</label>
+          <input id="lead-email" name="email" type="email" required placeholder="alex@domain.com" />
+        </div>
+        <div class="form-field">
+          <label for="lead-notes">Preferred Style & Notes</label>
+          <textarea id="lead-notes" name="notes" rows="3" placeholder="Interested in scheduling an on-site visit for Villa Aurelia 123…"></textarea>
+        </div>
+        <div class="dialog-actions">
+          <button type="button" class="btn btn--ghost" id="btn-contact-cancel">Cancel</button>
+          <button type="submit" class="btn btn--primary">Request Private Showing</button>
+        </div>
+      </form>
+    </dialog>
+
+    <script type="module" src="./src/main.ts"></script>
+  </body>
+</html>

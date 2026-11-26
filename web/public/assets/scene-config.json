@@ -1,0 +1,494 @@
+{
+  "project": "Modern Single-Story Luxury Residence \u2014 Villa Aurelia 123",
+  "units": "meters (1 Three.js unit = 1 Blender unit = 1 m)",
+  "coordinate_convention": "glTF 2.0 Right-Handed Y-Up (threeX = x, threeY = z, threeZ = -y)",
+  "site_bounds_m": {
+    "width_x": 9.144,
+    "depth_z": 13.5,
+    "total_land_area_m2": 123.44,
+    "building_footprint_m2": 80.17,
+    "usable_interior_m2": 69.43,
+    "finished_floor_y": 0.15,
+    "ceiling_height_m": 3.0
+  },
+  "assets": {
+    "blend_source": "house.blend",
+    "architecture": {
+      "file": "architecture.glb",
+      "objects": 353,
+      "triangles": 12550
+    },
+    "collision": {
+      "file": "collision.glb",
+      "objects": 44,
+      "triangles": 528
+    },
+    "interior_styles": {
+      "modern": {
+        "label": "Modern Minimalist",
+        "file": "furniture-modern.glb",
+        "floor_override_material": "Mat_Floor_ModernStone",
+        "objects": 628,
+        "triangles": 48284
+      },
+      "scandinavian": {
+        "label": "Scandinavian Natural",
+        "file": "furniture-scandinavian.glb",
+        "floor_override_material": "Mat_Floor_WhiteOak",
+        "objects": 628,
+        "triangles": 48284
+      },
+      "warm_luxury": {
+        "label": "Warm Luxury",
+        "file": "furniture-warm-luxury.glb",
+        "floor_override_material": "Mat_Floor_Limestone",
+        "objects": 628,
+        "triangles": 48284
+      }
+    }
+  },
+  "dollhouse_toggle_objects": {
+    "roof": [
+      "Roof_Main_FasciaSlab",
+      "Roof_Waterproof_Deck",
+      "Roof_Soffit_FrontOverhang",
+      "Roof_Soffit_RearTerrace",
+      "Roof_Parapet_Front",
+      "Roof_Parapet_Front_Coping",
+      "Roof_Parapet_East",
+      "Roof_Parapet_East_Coping",
+      "Roof_Parapet_Rear",
+      "Roof_Parapet_Rear_Coping",
+      "Roof_Parapet_West",
+      "Roof_Parapet_West_Coping",
+      "Roof_Parapet_StepS",
+      "Roof_Parapet_StepS_Coping",
+      "Roof_Parapet_StepW",
+      "Roof_Parapet_StepW_Coping",
+      "Roof_Carport_Slat_01",
+      "Roof_Carport_Slat_02",
+      "Roof_Carport_Slat_03",
+      "Roof_Carport_Slat_04",
+      "Roof_Carport_Slat_05",
+      "Roof_Carport_Slat_06",
+      "Roof_Carport_Slat_07",
+      "Roof_Carport_Slat_08",
+      "Roof_Carport_Slat_09",
+      "Roof_Carport_Slat_10",
+      "Roof_Carport_Slat_11",
+      "Roof_Carport_Slat_12",
+      "Roof_Carport_Slat_13",
+      "Roof_Carport_RainShield"
+    ],
+    "ceilings": [
+      "Ceiling_Main_Interior",
+      "Ceiling_Wet_MasterEnsuite",
+      "Ceiling_Wet_SharedBath",
+      "Ceiling_Wet_Laundry"
+    ]
+  },
+  "interactive_doors": [
+    {
+      "id": "D1",
+      "label": "Architectural Timber Pivot Door",
+      "connects": [
+        "EXT-02",
+        "RM-07"
+      ],
+      "object_name": "Door_Interactive_D1",
+      "kind": "hinged",
+      "pivot_blender": [
+        4.2,
+        2.1,
+        0.15
+      ],
+      "pivot_threejs": [
+        4.2,
+        0.15,
+        -2.1
+      ],
+      "center_threejs": [
+        4.7,
+        1.15,
+        -2.0
+      ],
+      "closed_aabb_threejs": [
+        4.2,
+        0.15,
+        -2.1,
+        5.2,
+        2.35,
+        -1.9
+      ],
+      "open_angle_deg": 90,
+      "swing_sign": 1,
+      "swing_direction": "Inward-Left (into Foyer)"
+    },
+    {
+      "id": "D2",
+      "label": "Flush Timber Interior Door",
+      "connects": [
+        "RM-08",
+        "RM-01"
+      ],
+      "object_name": "Door_Interactive_D2",
+      "kind": "hinged",
+      "pivot_blender": [
+        3.8,
+        8.275,
+        0.15
+      ],
+      "pivot_threejs": [
+        3.8,
+        0.15,
+        -8.275
+      ],
+      "center_threejs": [
+        3.86,
+        1.15,
+        -8.7
+      ],
+      "closed_aabb_threejs": [
+        3.8,
+        0.15,
+        -9.125,
+        3.92,
+        2.25,
+        -8.275
+      ],
+      "open_angle_deg": 90,
+      "swing_sign": 1,
+      "swing_direction": "Inward-South (into Master Bedroom)"
+    },
+    {
+      "id": "D3",
+      "label": "Flush Timber Interior Door",
+      "connects": [
+        "RM-08",
+        "RM-03"
+      ],
+      "object_name": "Door_Interactive_D3",
+      "kind": "hinged",
+      "pivot_blender": [
+        3.124,
+        8.02,
+        0.15
+      ],
+      "pivot_threejs": [
+        3.124,
+        0.15,
+        -8.02
+      ],
+      "center_threejs": [
+        3.184,
+        1.15,
+        -7.62
+      ],
+      "closed_aabb_threejs": [
+        3.124,
+        0.15,
+        -8.02,
+        3.244,
+        2.25,
+        -7.22
+      ],
+      "open_angle_deg": 90,
+      "swing_sign": -1,
+      "swing_direction": "Inward-North (into Bedroom 2)"
+    },
+    {
+      "id": "D4",
+      "label": "Flush Timber Interior Door",
+      "connects": [
+        "RM-08",
+        "RM-04"
+      ],
+      "object_name": "Door_Interactive_D4",
+      "kind": "hinged",
+      "pivot_blender": [
+        6.084,
+        4.98,
+        0.15
+      ],
+      "pivot_threejs": [
+        6.084,
+        0.15,
+        -4.98
+      ],
+      "center_threejs": [
+        6.024,
+        1.15,
+        -4.58
+      ],
+      "closed_aabb_threejs": [
+        5.964,
+        0.15,
+        -4.98,
+        6.084,
+        2.25,
+        -4.18
+      ],
+      "open_angle_deg": 90,
+      "swing_sign": 1,
+      "swing_direction": "Inward-North (into Bedroom 3)"
+    },
+    {
+      "id": "D5",
+      "label": "Moisture-Resistant Bathroom Door",
+      "connects": [
+        "RM-10",
+        "RM-05"
+      ],
+      "object_name": "Door_Interactive_D5",
+      "kind": "hinged",
+      "pivot_blender": [
+        4.744,
+        6.16,
+        0.15
+      ],
+      "pivot_threejs": [
+        4.744,
+        0.15,
+        -6.16
+      ],
+      "center_threejs": [
+        4.804,
+        1.15,
+        -6.51
+      ],
+      "closed_aabb_threejs": [
+        4.744,
+        0.15,
+        -6.86,
+        4.864,
+        2.25,
+        -6.16
+      ],
+      "open_angle_deg": 90,
+      "swing_sign": 1,
+      "swing_direction": "Inward-South (into Shared Bathroom)"
+    },
+    {
+      "id": "D6",
+      "label": "Moisture-Resistant Ensuite Door",
+      "connects": [
+        "RM-01",
+        "RM-02"
+      ],
+      "object_name": "Door_Interactive_D6",
+      "kind": "hinged",
+      "pivot_blender": [
+        3.92,
+        9.45,
+        0.15
+      ],
+      "pivot_threejs": [
+        3.92,
+        0.15,
+        -9.45
+      ],
+      "center_threejs": [
+        3.86,
+        1.15,
+        -9.825
+      ],
+      "closed_aabb_threejs": [
+        3.8,
+        0.15,
+        -10.2,
+        3.92,
+        2.25,
+        -9.45
+      ],
+      "open_angle_deg": 90,
+      "swing_sign": -1,
+      "swing_direction": "Inward-South (into Master Ensuite)"
+    },
+    {
+      "id": "D7",
+      "label": "Cavity Pocket Door (Laundry)",
+      "connects": [
+        "RM-08",
+        "RM-06"
+      ],
+      "object_name": "Door_Interactive_D7",
+      "kind": "pocket_sliding",
+      "center_threejs": [
+        4.804,
+        1.15,
+        -4.355
+      ],
+      "closed_aabb_threejs": [
+        4.744,
+        0.15,
+        -4.73,
+        4.864,
+        2.25,
+        -3.98
+      ],
+      "slide_axis_threejs": [
+        0,
+        0,
+        -1
+      ],
+      "max_slide_m": 0.67,
+      "swing_sign": 1,
+      "swing_direction": "Pocket Slide North into IW-04 Wall Cavity (zero swing clearance)"
+    },
+    {
+      "id": "D8",
+      "label": "3-Panel Aluminum Sliding Glass Door",
+      "connects": [
+        "RM-09",
+        "EXT-04"
+      ],
+      "object_name": "Door_Interactive_D8_Panel1",
+      "kind": "sliding_multi",
+      "center_threejs": [
+        7.217,
+        1.15,
+        -11.6
+      ],
+      "closed_aabb_threejs": [
+        5.817,
+        0.15,
+        -11.7,
+        8.617,
+        2.55,
+        -11.5
+      ],
+      "slide_axis_threejs": [
+        1,
+        0,
+        0
+      ],
+      "max_slide_m": 1.727,
+      "swing_sign": 1,
+      "swing_direction": "Multi-track Slide East/West (to Rear Terrace)"
+    }
+  ],
+  "lighting_presets": {
+    "morning": {
+      "label": "Morning Tropical Light (08:30)",
+      "sun_elevation_deg": 28.0,
+      "sun_azimuth_deg": 95.0,
+      "sky_intensity": 0.085,
+      "sun_color_hex": "#FFF0D6",
+      "interior_lights_multiplier": 1.15,
+      "outdoor_lights_multiplier": 0.0,
+      "exposure": 0.25
+    },
+    "afternoon": {
+      "label": "Bright Afternoon (14:30)",
+      "sun_elevation_deg": 42.0,
+      "sun_azimuth_deg": 145.0,
+      "sky_intensity": 0.085,
+      "sun_color_hex": "#FFFFFF",
+      "interior_lights_multiplier": 0.65,
+      "outdoor_lights_multiplier": 0.3,
+      "exposure": -0.15
+    },
+    "sunset": {
+      "label": "Golden Sunset (17:45)",
+      "sun_elevation_deg": 7.5,
+      "sun_azimuth_deg": 248.0,
+      "sky_intensity": 0.068,
+      "sun_color_hex": "#FFB570",
+      "interior_lights_multiplier": 1.95,
+      "outdoor_lights_multiplier": 2.1,
+      "exposure": 0.38
+    },
+    "night": {
+      "label": "Architectural Night (20:30)",
+      "sun_elevation_deg": -12.0,
+      "sun_azimuth_deg": 265.0,
+      "sky_intensity": 0.008,
+      "sun_color_hex": "#3B527A",
+      "interior_lights_multiplier": 2.5,
+      "outdoor_lights_multiplier": 2.6,
+      "exposure": 0.55
+    }
+  },
+  "cameras": {
+    "exterior_hero": {
+      "threejs_position": [
+        10.2,
+        2.25,
+        5.8
+      ],
+      "threejs_target": [
+        4.6,
+        1.75,
+        -3.8
+      ],
+      "fov_deg": 46
+    },
+    "exterior_rear": {
+      "threejs_position": [
+        4.95,
+        1.48,
+        -13.15
+      ],
+      "threejs_target": [
+        7.65,
+        1.32,
+        -10.6
+      ],
+      "fov_deg": 52
+    },
+    "interior_living": {
+      "threejs_position": [
+        5.75,
+        1.63,
+        -5.55
+      ],
+      "threejs_target": [
+        7.45,
+        1.4,
+        -11.4
+      ],
+      "fov_deg": 55
+    },
+    "interior_master": {
+      "threejs_position": [
+        3.55,
+        1.59,
+        -8.65
+      ],
+      "threejs_target": [
+        1.1,
+        1.27,
+        -10.6
+      ],
+      "fov_deg": 54
+    },
+    "dollhouse_ortho": {
+      "type": "orthographic",
+      "threejs_position": [
+        16.5,
+        18.5,
+        5.5
+      ],
+      "threejs_target": [
+        4.57,
+        1.2,
+        -6.75
+      ],
+      "ortho_scale": 16.2
+    },
+    "first_person_start": {
+      "eye_height_m": 1.65,
+      "threejs_position": [
+        4.7,
+        1.8,
+        -2.8
+      ],
+      "threejs_target": [
+        6.0,
+        1.65,
+        -7.2
+      ],
+      "fov_deg": 60
+    }
+  }
+}

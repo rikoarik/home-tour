@@ -1,0 +1,21 @@
+{
+  "name": "villa-aurelia-123-3d-experience",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "typecheck": "tsc --noEmit",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview --host 127.0.0.1 --port 4173",
+    "build:standalone": "npm run build && node scripts/build-standalone.mjs"
+  },
+  "dependencies": {
+    "three": "^0.176.0"
+  },
+  "devDependencies": {
+    "@types/three": "^0.176.0",
+    "typescript": "^5.8.0",
+    "vite": "^6.2.0"
+  }
+}

@@ -1,0 +1,22 @@
+# Operating System & Editor
+.DS_Store
+Thumbs.db
+*.swp
+
+# Node & Web Build Outputs
+node_modules/
+web/dist/
+web/dist-single/
+web/verification-shots/
+
+# Heavy Regenerable Blender Intermediates (regenerate via blender/generate_textures.py & blender/build_house.py)
+blender/house.blend
+blender/house.blend1
+blender/textures/
+blender/renders/
+blender/*.glb
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
